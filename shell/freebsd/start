@@ -1,0 +1,39 @@
+#!/bin/sh
+# PROVIDE: Odin
+# REQUIRE: PHP
+#
+# Add the following lines to /etc/rc.conf to run {name}:
+#
+# {name}_enable (bool): Set it to "YES" to enable {name}.
+#  name     Default is "YES".
+# {name}_config (server):   Set {name} config file here.
+#
+# created by Odin, 2013年 6月29日 星期六 14时51分00秒 CST
+name="example"
+
+## env
+export TZ="Asia/Chongqing"
+
+. /etc/rc.subr
+rcvar=`set_rcvar`
+load_rc_config ${name}
+
+basedir="/services/daemons/example"
+
+eval ${name}_enable=\${${name}_enable:-"YES"}
+eval runner=\${${name}_runner:-"/usr/local/php5_new/bin/php"}
+eval title=\${${name}_title:-"${name}"}
+eval inifile=\${${name}_conffile:-"${basedir}/workers/conf/${name}.ini"}
+eval debuglevel=\${${name}_debug:-"3"}
+
+command=${runner}
+#procname=${title}
+procname="php"  #freebsd的proctitle模块有这个特性
+pidfile="${basedir}/run/${title}.pid"
+conffile=${inifile}
+
+#sig_stop="KILL"
+
+command_args="${basedir}/main.m @c ${conffile} @d ${debuglevel}"
+
+run_rc_command "$1"
