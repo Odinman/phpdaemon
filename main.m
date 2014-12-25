@@ -20,6 +20,7 @@ define('_DAEMON_ROOT', dirname(__FILE__).'/');
 include_once(_DAEMON_ROOT.'inc/const.m');
 
 //functions
+include_once(_DAEMON_ROOT.'fun/log.m');
 include_once(_DAEMON_ROOT.'fun/base.m');
 include_once(_DAEMON_ROOT.'fun/daemon.m');
 include_once(_DAEMON_ROOT.'fun/file.m');
