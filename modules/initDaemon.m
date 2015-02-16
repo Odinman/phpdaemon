@@ -78,6 +78,9 @@ if (isset($GLOBALS['PARAMS']['t']) || isset($GLOBALS['PARAMS']['title'])) {
 if ($GLOBALS['OPTIONS']['libs']['redis']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['redis'])==='yes') {
     include_once(_DAEMON_ROOT.'lib/Predis.php');
 }
+if ($GLOBALS['OPTIONS']['libs']['phpmailer']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['phpmailer'])==='yes') {
+    include_once(_DAEMON_ROOT.'lib/PHPMailer/PHPMailerAutoload.php');
+}
 if ($GLOBALS['OPTIONS']['libs']['thrift']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['thrift'])==='yes') {
 	$GLOBALS['THRIFT_ROOT'] = _DAEMON_ROOT . 'lib/thrift';
 	require_once($GLOBALS['THRIFT_ROOT'] . '/Thrift.php');
