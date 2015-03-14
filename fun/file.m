@@ -327,3 +327,17 @@ function _package($files,$tarball=null,$type='j') {
     return $ret;
 }
 /* }}} */
+
+/* {{{ updateTdb
+ */
+function _updateTdb($file_fullpath,$file_content) {
+    if($fp=@fopen($file_fullpath,"wb")){
+        fputs($fp,$file_content);
+        ftruncate($fp,strlen($file_content));
+        fclose($fp);
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+/* }}} */
