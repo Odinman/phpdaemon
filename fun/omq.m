@@ -52,7 +52,7 @@ function _omqDo($queue,$msg) {
  *
  */
 function _omqPush($queue,$key,$value) {
-    return _omqDo($queue,array("PUSH","",$key,$value));
+    return _omqDo($queue,array("PUSH",$key,$value));
 }
 /* }}} */
 
