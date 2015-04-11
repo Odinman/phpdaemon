@@ -48,11 +48,16 @@ function _omqDo($queue,$msg) {
 }
 /* }}} */
 
-/* {{{ function _omqPush($queue,$key, $value)
+/* {{{ function _omqPush()
  *
  */
-function _omqPush($queue,$key,$value) {
-    return _omqDo($queue,array("PUSH",$key,$value));
+//function _omqPush($queue,$key,$value) {
+function _omqPush() {
+    $args=func_get_args();
+    $queue=array_shift($args);  //第一个参数是queue,取出
+    array_unshift($args, "PUSH");    //放命令到数组头部
+    //return _omqDo($queue,array("PUSH",$key,$value));
+    return _omqDo($queue,$args);
 }
 /* }}} */
 
@@ -84,7 +89,11 @@ function _omqDel($queue,$key) {
  *
  */
 function _omqSet($queue,$key,$value) {
-    return _omqDo($queue,array("SET","",$key,$value));
+    //return _omqDo($queue,array("SET","",$key,$value));
+    $args=func_get_args();
+    $queue=array_shift($args);  //第一个参数是queue,取出
+    array_unshift($args, "SET");    //放命令到数组头部
+    return _omqDo($queue,$args);
 }
 /* }}} */
 
