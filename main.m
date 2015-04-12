@@ -25,6 +25,7 @@ include_once(_DAEMON_ROOT.'fun/base.m');
 include_once(_DAEMON_ROOT.'fun/daemon.m');
 include_once(_DAEMON_ROOT.'fun/file.m');
 include_once(_DAEMON_ROOT.'fun/omq.m');
+include_once(_DAEMON_ROOT.'fun/omqpoll.m');
 include_once(_DAEMON_ROOT.'fun/ip.m');
 
 /* {{{ 初始化(读取配置项等)
