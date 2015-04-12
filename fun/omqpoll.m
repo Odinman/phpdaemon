@@ -32,12 +32,12 @@ function _getOmqPoller($host,$port) {
 function _omqPollDo($poller,$msg, $timeout=0) {
     $rt=false;
 
+    if ($timeout>0) {
+        $to=$timeout*1000;
+    } else {
+        $to=3000;
+    }
     do {
-        if ($timeout>0) {
-            $to=$timeout*1000;
-        } else {
-            $to=3000;
-        }
         $senders = array();
         $receivers= array();
         $poller->poll($receivers, $senders, $to);
@@ -90,10 +90,29 @@ function _omqPollPush() {
 /* }}} */
 
 /* {{{ function _omqPollPop($poller,$key, $timeout=0)
- *
+ * timeout大于0是为阻塞式
  */
 function _omqPollPop($poller,$key,$timeout=0) {
-    return _omqPollDo($poller,array("POP",$key),$timeout);
+    $rt=false;
+
+    $to=$timeout*1000;
+    $start=_microtimeFloat();
+    do {
+        $rt=_omqPollDo($poller,array("POP",$key),$timeout);
+
+        $end=_microtimeFloat();
+
+        $dura=round(($end-$start)*1000,3);
+
+        if ($dura<$to && $rt===NULL) {
+            usleep(1000);
+        } else {
+            //不阻塞，直接返回
+            break;
+        }
+    } while($rt===NULL);
+
+    return $rt;
 }
 /* }}} */
 
