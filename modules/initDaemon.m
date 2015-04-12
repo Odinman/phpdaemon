@@ -52,6 +52,7 @@ $GLOBALS['PARAMS']=_readArgv();
  * 如果不是hiphop, 环境变量也会到$_SERVER数组中去,(启动脚本可以支持这种配置)
  * 如果有额外需要定义的配置,也在这里指定(文件)
  */
+//全局配置
 //自定义的配置文档, 必须为ini格式
 $GLOBALS['configFile']=empty($GLOBALS['PARAMS']['c'])?(isset($_SERVER['config_file'])?$_SERVER['config_file']:''):$GLOBALS['PARAMS']['c'];
 //程序设置(综合参数以及配置文件,支持多次load,这之前的设置都是不能reload)
@@ -131,6 +132,30 @@ if (empty($GLOBALS['OPTIONS']['title'])) {  // 必须要有
      debug("Not Found Process Title",_DLV_EMERG);
     _shutdown();
 }
+/* }}} */
+
+/* {{{  global setting
+ * 全局配置文件
+ */
+$globalConfigFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/global.ini';
+if (file_exists($globalConfigFile)) {
+    $GLOBALS['GLOBAL']=@parse_ini_file($globalConfigFile,true);
+}
+$loadGlobalConfigScript=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/config.m';
+if (file_exists($loadGlobalConfigScript)) {
+    if (@include_once($loadGlobalConfigScript)) {
+        _debug("[global_config:{$loadGlobalConfigScript}][loaded]",_DLV_NOTICE);
+    } else {
+        _debug("[global_config:{$loadGlobalConfigScript}][load_fail]",_DLV_NOTICE);
+    }
+}
+//load log setting
+if (!empty($GLOBALS['_log_'])) {
+    foreach($GLOBALS['_log_'] as $tag=>$logSetting) {
+        _syslogRegister($logSetting,$tag,$GLOBALS['OPTIONS']['title']);
+    }
+}
+
 /* }}} */
 
 /* {{{ 预加载,加入worker定义的一些常数以及函数(php文件)
