@@ -19,6 +19,7 @@
 function _connectOMQ($host,$port) {
     $queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ, "MySock1");
     $queue->connect("tcp://{$host}:{$port}");
+    $queue->setSockOpt (ZMQ::SOCKOPT_LINGER, 1000);
     return $queue;
 }
 /* }}} */
@@ -30,7 +31,41 @@ function _omqDo($queue,$msg) {
     $rt = false;
 
     do {
-        $tmp=$queue->sendmulti($msg)->recvMulti();
+        $send_retries = 3;
+        $sent    = false;
+        $receive_retries = 3;
+        $received  = false;
+        // sending
+        while(!$sent || $send_retries--) {
+            try {
+                if ($queue->sendmulti($msg, ZMQ::MODE_DONTWAIT) !== false) {
+                    $sent=true;
+                }
+            } catch (ZMQSocketException $e) {
+                //_notice("[%s]get error: %s",__FUNCTION__, $e->getMessage());
+            }
+            usleep(1000);
+        }
+
+        if (!$sent) {
+            break;
+        }
+
+        while(!$received || $receive_retries--) {
+            try {
+                $tmp = $queue->recvMulti(ZMQ::MODE_DONTWAIT);
+                if ($tmp) {
+                    $received = true;
+                }
+            } catch (ZMQSocketException $e) {
+                //_notice("[%s]get error: %s",__FUNCTION__, $e->getMessage());
+            }
+            sleep(1);
+        }
+
+        if (!$received) {
+            break;
+        }
 
         $r = array_shift($tmp);
         if ($r == "NIL") {
