@@ -137,6 +137,18 @@ if (empty($GLOBALS['OPTIONS']['title'])) {  // 必须要有
 /* {{{  global setting
  * 全局配置文件
  */
+//global const
+$globalConstFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/const.m';
+if (file_exists($globalConstFile)) {
+    if (@include_once($globalConstFile)) {
+        _debug("[global_const:{$globalConstFile}][loaded]",_DLV_NOTICE);
+    } else {
+        _debug("[global_const:{$globalConstFile}][load_fail]",_DLV_NOTICE);
+    }
+} else {
+    _warn("[global_const_file: %s][not_found]", $globalConstFile);
+}
+
 $globalConfigFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/global.ini';
 if (file_exists($globalConfigFile)) {
     $GLOBALS['GLOBAL']=@parse_ini_file($globalConfigFile,true);
