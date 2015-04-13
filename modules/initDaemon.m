@@ -140,6 +140,8 @@ if (empty($GLOBALS['OPTIONS']['title'])) {  // 必须要有
 $globalConfigFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/global.ini';
 if (file_exists($globalConfigFile)) {
     $GLOBALS['GLOBAL']=@parse_ini_file($globalConfigFile,true);
+} else {
+    _warn("[global_config: %s][not_found]", $globalConfigFile);
 }
 $loadGlobalConfigScript=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/config.m';
 if (file_exists($loadGlobalConfigScript)) {
@@ -148,12 +150,25 @@ if (file_exists($loadGlobalConfigScript)) {
     } else {
         _debug("[global_config:{$loadGlobalConfigScript}][load_fail]",_DLV_NOTICE);
     }
+} else {
+    _warn("[global_config_script: %s][not_found]", $loadGlobalConfigScript);
 }
 //load log setting
 if (!empty($GLOBALS['_log_'])) {
     foreach($GLOBALS['_log_'] as $tag=>$logSetting) {
         _syslogRegister($logSetting,$tag,$GLOBALS['OPTIONS']['title']);
     }
+}
+//load global function
+$loadGlobalFunctionFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/../global/fun.m';
+if (file_exists($loadGlobalFunctionFile)) {
+    if (@include_once($loadGlobalFunctionFile)) {
+        _debug("[global_functions:{$loadGlobalFunctionFile}][loaded]",_DLV_NOTICE);
+    } else {
+        _debug("[global_functions:{$loadGlobalFunctionFile}][load_fail]",_DLV_NOTICE);
+    }
+} else {
+    _warn("[global_functions_file: %s][not_found]", $loadGlobalConfigScript);
 }
 
 /* }}} */
