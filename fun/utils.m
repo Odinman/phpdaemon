@@ -79,6 +79,7 @@ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0) {
 
     do {
         if (!$conn || empty($ID)) {
+            _warn("[%s][id: %s][no_conn]",__FUNCTION__,$ID);
             break;
         }
         $now=time();
