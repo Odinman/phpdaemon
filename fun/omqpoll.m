@@ -13,7 +13,7 @@
   +----------------------------------------------------------------------+
 */
 
-/* {{{ function _connectOMQ($host,$port)
+/* {{{ function _getOmqPoller($host,$port)
  *
  */
 function _getOmqPoller($host,$port) {
@@ -139,7 +139,7 @@ function _omqPollSet($poller,$key,$value) {
     //return _omqPollDo($poller,array("SET","",$key,$value));
     $args=func_get_args();
     $poller=array_shift($args);  //第一个参数是queue,取出
-    array_unshift($args, "SET");    //放命令到数组头部
+    array_unshift($args, "SET", "");    //放命令到数组头部
     return _omqPollDo($poller,$args);
 }
 /* }}} */

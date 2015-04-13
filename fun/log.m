@@ -47,7 +47,7 @@ define('_FACILITY_NEWS',     LOG_NEWS);
 define('_FACILITY_SYSLOG',   LOG_SYSLOG);
 define('_FACILITY_USER',     LOG_USER);
 define('_FACILITY_UUCP',     LOG_UUCP);
-define('_FACILITY_DEFAULT',  LOG_LOCAL3);
+define('_FACILITY_DEFAULT',  LOG_LOCAL6);
 //priority
 define('_PRIORITY_EMERG',    LOG_EMERG);
 define('_PRIORITY_ALERT',    LOG_ALERT);
@@ -57,7 +57,7 @@ define('_PRIORITY_WARNING',  LOG_WARNING);
 define('_PRIORITY_NOTICE',   LOG_NOTICE);
 define('_PRIORITY_INFO',     LOG_INFO);
 define('_PRIORITY_DEBUG',    LOG_DEBUG);
-define('_PRIORITY_DEFAULT',  LOG_DEBUG);
+define('_PRIORITY_DEFAULT',  LOG_INFO);
 /* }}} */
 
 /* {{{ 获取debug级别

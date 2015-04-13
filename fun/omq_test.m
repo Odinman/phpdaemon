@@ -18,8 +18,9 @@ include("fun/omqpoll.m");
 $q=_getOmqPoller("127.0.0.1","7000");
 
 $ts=time()-86400;
-_omqPollPush($q,"odintest","daily_budget",'{"camp":"70000067","ts":'.$ts.'}');
-$info=_omqPollPop($q,"odintest",1);
-print_r($info);
+_omqPollSet($q,"odintest","abc");
+//_omqPollPush($q,"odintest","daily_budget",'{"camp":"70000067","ts":'.$ts.'}');
+//$info=_omqPollPop($q,"odintest",1);
+//print_r($info);
 //_omqDel($q, "odintest");
 
