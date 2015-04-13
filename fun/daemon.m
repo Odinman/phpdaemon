@@ -442,7 +442,7 @@ function _loadOptions() {
             'loaded' => true,   //默认设置只需要载入一次
             'mode' => 'daemon',  //运行模式,默认为daemon
             'workers' => array('default'=>'worker.m'), //worker脚本
-            'debug_log' => 'local3.debug',
+            'debug_log' => 'local6.info',   //一般系统都会写道/var/log/message里面
             'show_debug' => false,
             'debug_level' => _DLV_WARNING,
         );
