@@ -97,20 +97,26 @@ function _omqPollPop($poller,$key,$timeout=0) {
 
     $to=$timeout*1000;
     $start=_microtimeFloat();
+    $tried=0;
     do {
+        $tried++;
         $rt=_omqPollDo($poller,array("POP",$key),$timeout);
 
         $end=_microtimeFloat();
 
         $dura=round(($end-$start)*1000,3);
 
+        $i=10000;
         if ($dura<$to && $rt===NULL) {
-            usleep(1000);
+            $sl=$i*(1<<$tried)>=500000?500000:$i*(1<<$tried);
+            usleep($sl);
         } else {
             //不阻塞，直接返回
+            //_notice("[%s][tried: %d][to: %d][dura: %d]",__FUNCTION__,$tried,$to,$dura);
             break;
         }
     } while($rt===NULL);
+    //_notice("[%s][tried: %d]",__FUNCTION__,$tried);
 
     return $rt;
 }
