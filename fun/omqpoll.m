@@ -70,7 +70,11 @@ function _omqPollDo($poller,$msg, $timeout=0) {
             break;
         }
 
-        $rt=$tmp;
+        if (empty($tmp)) {  //仅仅返回OK,代表成功
+            $rt=true;
+        } else {
+            $rt=$tmp;
+        }
     } while(false);
 
     return $rt;
