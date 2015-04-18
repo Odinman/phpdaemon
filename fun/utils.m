@@ -52,7 +52,7 @@ function _getRedisConnections() {
 }
 /* }}} */
 
-/* {{{ _connectMysql
+/* {{{ function _connectMysql($host,$user,$pass,$db)
  */
 function _connectMysql($host,$user,$pass,$db) {
     $rt = mysqli_init();
@@ -87,7 +87,8 @@ function _mysqlExecute($mysqli, $sql) {
 }
 /* }}} */
 
-/* {{{ _getLock,获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+/* {{{ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
  * @param resource $conn, redis连接
  * @param int $ID, 锁ID
  * @param string $checksum
@@ -132,7 +133,8 @@ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0) {
 }
 /* }}} */
 
-/* {{{ _renewLock,更新锁
+/* {{{ function _renewLock($conn,$ID,$checksum,$lockPrefix=null,$lockTimeout=0)
+ * 更新锁
  * @param resource $conn, redis连接
  * @param int $ID, id
  */
@@ -180,7 +182,8 @@ function _renewLock($conn,$ID,$checksum,$lockPrefix=null,$lockTimeout=0) {
 }
 /* }}} */
 
-/* {{{ _releaseLock,释放锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+/* {{{ function _releaseLock($conn,$ID,$checksum,$lockPrefix=null)
+ * 释放锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
  * @param resource $conn, redis连接
  * @param int $ID, id
  */
@@ -224,7 +227,7 @@ function _releaseLock($conn,$ID,$checksum,$lockPrefix=null) {
 }
 /* }}} */
 
-/* {{{ _createUUID
+/* {{{ function _createUUID($namespace = '')
  */
 function _createUUID($namespace = '') {
     static $uuid = '';
@@ -246,7 +249,7 @@ function _createUUID($namespace = '') {
 }
 /* }}} */
 
-/* {{{ _getFileExt
+/* {{{ function _getFileExt($mimetype)
  */
 function _getFileExt($mimetype) {
     $ret=false;
@@ -278,7 +281,7 @@ function _getFileExt($mimetype) {
 }
 /* }}} */
 
-/* {{{ _getSubpath
+/* {{{ function _getSubpath($rowKey)
  */
 function _getSubpath($rowKey) {
     $rt='00/00';
