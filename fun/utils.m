@@ -79,6 +79,10 @@ function _mysqlExecute($mysqli, $sql) {
         }
     } while(false);
 
+    if ($rt===false) {
+        _warn("[%s][query_failed: %s]",$sql);
+    }
+
     return $rt;
 }
 /* }}} */
