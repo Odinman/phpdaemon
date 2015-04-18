@@ -156,7 +156,7 @@ function _spawnWorker($workerDetail) {
             if ($GLOBALS['_daemon']['workerRun']===null) {
                 $GLOBALS['_daemon']['workerCode']=1;    //null代表不要在respawn了
             } elseif ($loop>=$workerDetail['max']) {
-                _debug("[loop:$loop][reach_max]",_DLV_WARNING);
+                _debug("[".__FUNCTION__."][loop:$loop][reach_max]",_DLV_NOTICE);
                 $GLOBALS['_daemon']['workerRun']=false;
                 //if ($workerDetail['max']==1) {
                 //    $GLOBALS['_daemon']['workerCode']=1;    //loop设置为1的话不再重启
@@ -204,7 +204,7 @@ function _registerSignals($roleTag) {
 /* {{{ _masterSigHandler
  */
 function _masterSigHandler($signo){
-    _debug("[".__FUNCTION__."][Caught:{$GLOBALS['_daemon']['signalsName'][$signo]}($signo)]",_DLV_WARNING);
+    _debug("[".__FUNCTION__."][Caught:{$GLOBALS['_daemon']['signalsName'][$signo]}($signo)]",_DLV_NOTICE);
     /* {{{解决不同系统SIGCHLD不同的问题
      */
     if ($GLOBALS['_daemon']['signalsName'][$signo]=='SIGCHLD') {
@@ -273,7 +273,7 @@ function _waitPid() {
             list($title,$sn)=explode('#',$workerTitle);
             if ($rCode!=1) {    // 不为1的,都重新启动
                 //update status
-                _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][will_respawn]",_DLV_WARNING);
+                _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][will_respawn]",_DLV_NOTICE);
                 $GLOBALS['_daemon']['runningWorkers'][$title]["#{$sn}"]['stat']=_PSTAT_STANDBY;
             } else {    //其它返回码,不再重新启动,标记为死亡
                 _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][not_need_respawn]",_DLV_WARNING);
@@ -398,7 +398,7 @@ function _iterate($sleepSeconds = 0) {
 function _onShutdown() {
     //if ($GLOBALS['_daemon']['role']=='father' || ($GLOBALS['_daemon']['role']=='master' && $GLOBALS['_daemon']['masterRun']==false) || ($GLOBALS['_daemon']['role']=='worker' && $GLOBALS['_daemon']['workerRun']==false)) {
     if (($GLOBALS['_daemon']['role']=='master' && $GLOBALS['_daemon']['masterRun']==false) || ($GLOBALS['_daemon']['role']=='worker' && $GLOBALS['_daemon']['workerRun']==false)) {
-        _debug("[byebye]",_DLV_WARNING);
+        _debug("[byebye]",_DLV_NOTICE);
         return;
     }
 

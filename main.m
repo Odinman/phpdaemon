@@ -82,7 +82,7 @@ while($GLOBALS['_daemon']['masterRun']===true) {
                     if (-1 === $wPid) {
                         _debug("[{$workerTitle}][#{$wSN}][spawn_failed]",_DLV_EMERG);
                     } else {
-                        _debug("[{$workerTitle}][#{$wSN}][pid:$wPid][spawn_successful]",_DLV_WARNING);
+                        _debug("[{$workerTitle}][#{$wSN}][pid:$wPid][spawn_successful]",_DLV_NOTICE);
                         $GLOBALS['_daemon']['runningWorkers'][$workerTitle]["#{$wSN}"]['stat']=_PSTAT_RUNNING;
                         $GLOBALS['_daemon']['runningWorkers'][$workerTitle]["#{$wSN}"]['pid']=$wPid;
                         $GLOBALS['_daemon']['runningWorkers']['_pids'][$wPid]="{$workerTitle}#{$wSN}";
@@ -99,12 +99,11 @@ while($GLOBALS['_daemon']['masterRun']===true) {
     pcntl_signal_dispatch();
 
     if ($workerRun===false) {   //没有worker在运行了,完成历史使命,退出
-    //if ($GLOBALS['OPTIONS']['mode']==='run') {
         _debug("[no_worker_running]",_DLV_CRIT);
         $GLOBALS['_daemon']['masterRun']=false;
     }
-    // show status, once per 500
-    if ($loop%500==0) {
+    // show status, once per 5000
+    if ($loop%5000==0) {
         $pidArr=array();
         $titleArr=array();
         foreach ($GLOBALS['_daemon']['runningWorkers'] as $key=>$value) {
@@ -121,7 +120,7 @@ while($GLOBALS['_daemon']['masterRun']===true) {
             }
         }
         $titleStr=implode(',',$titleArr);
-        _debug("[{$pidStr}][{$titleStr}]",_DLV_CRIT);
+        _debug("[MAIN][{$pidStr}][{$titleStr}]",_DLV_CRIT);
     }
 }
 
