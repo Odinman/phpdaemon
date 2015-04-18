@@ -294,3 +294,31 @@ function _getSubpath($rowKey) {
     return $rt;
 }
 /* }}} */
+
+/* {{{  function _getRemoteContent($url)
+ *
+ */
+function _getRemoteContent($url) {
+    $rt = false;
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    //curl_setopt($ch, CURLOPT_HEADER, 1);
+    $output = curl_exec($ch);
+    $info = curl_getinfo($ch);
+
+    if ($info['http_code']==200) {
+        _notice("[%s][get: %s]", __FUNCTION__,$url);
+        $rt=$output;
+    } else {
+        _notice("[%s][failed: %s]", __FUNCTION__,$url);
+    }
+
+    curl_close($ch);
+    return $rt;
+}
+
+/* }}} */
