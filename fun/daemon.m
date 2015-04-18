@@ -276,7 +276,7 @@ function _waitPid() {
                 _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][will_respawn]",_DLV_NOTICE);
                 $GLOBALS['_daemon']['runningWorkers'][$title]["#{$sn}"]['stat']=_PSTAT_STANDBY;
             } else {    //其它返回码,不再重新启动,标记为死亡
-                _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][not_need_respawn]",_DLV_WARNING);
+                _debug("[".__FUNCTION__."][pid:{$pid}][{$title}#{$sn}][rcode:$rCode][not_need_respawn]",_DLV_NOTICE);
                 $GLOBALS['_daemon']['runningWorkers'][$title]["#{$sn}"]['stat']=_PSTAT_DEAD;
             }
             //从活动进程表中去除
@@ -320,21 +320,21 @@ function _waitAll() {
 /* {{{ _workerSigHandler
  */
 function _workerSigHandler($signo) {
-    _debug("[".__FUNCTION__."][Caught:{$GLOBALS['_daemon']['signalsName'][$signo]}($signo)]",_DLV_WARNING);
+    _debug("[".__FUNCTION__."][Caught:{$GLOBALS['_daemon']['signalsName'][$signo]}($signo)]",_DLV_NOTICE);
     switch($signo) {
     case SIGTERM:
         $GLOBALS['_daemon']['workerRun']=NULL;
-        _debug("[".__FUNCTION__."][I({$GLOBALS['_daemon']['workerPid']}) will graceful quit][not_respawn]",_DLV_WARNING);
+        _debug("[".__FUNCTION__."][I({$GLOBALS['_daemon']['workerPid']}) will graceful quit][not_respawn]",_DLV_NOTICE);
         break;
     case SIGHUP:
     case SIGINT:
         $GLOBALS['_daemon']['workerRun']=false; //graceful shutdown worker
-        _debug("[".__FUNCTION__."][I({$GLOBALS['_daemon']['workerPid']}) will graceful quit][and_respawn]",_DLV_WARNING);
+        _debug("[".__FUNCTION__."][I({$GLOBALS['_daemon']['workerPid']}) will graceful quit][and_respawn]",_DLV_NOTICE);
         break;
     case SIGUSR1:
         //reload options
         _loadOptions();
-        _debug("[".__FUNCTION__."]-[reload]",_DLV_WARNING);
+        _debug("[".__FUNCTION__."]-[reload]",_DLV_NOTICE);
         break;
     default:
         break;
