@@ -55,14 +55,31 @@ function _getRedisConnections() {
 /* {{{ _connectMysql
  */
 function _connectMysql($host,$user,$pass,$db) {
-    $ret = mysqli_init();
-    $ret->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
-    @$ret->real_connect($host,$user,$pass,$db);
-    if ($ret->connect_errno) {
+    $rt = mysqli_init();
+    $rt->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+    $rt->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
+    @$rt->real_connect($host,$user,$pass,$db);
+    if ($rt->connect_errno) {
         //连接失败
         return false;
     }
-    return $ret;
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _mysqlExecute($mysqli, $sql)
+ *
+ */
+function _mysqlExecute($mysqli, $sql) {
+    $rt=false;
+
+    do {
+        if ($mysqli->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+            return $mysqli->query($sql);
+        }
+    } while(false);
+
+    return $rt;
 }
 /* }}} */
 
