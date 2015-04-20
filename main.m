@@ -120,7 +120,7 @@ while($GLOBALS['_daemon']['masterRun']===true) {
             }
         }
         $titleStr=implode(',',$titleArr);
-        _debug("[MAIN][{$pidStr}][{$titleStr}]",_DLV_CRIT);
+        _debug("[MAIN][{$pidStr}][{$titleStr}]",_DLV_NOTICE);
     }
 }
 
