@@ -19,6 +19,7 @@ function _getRedisConnections() {
     $rt=false;
 
     do {
+        $GLOBALS['ciRedisConn'] = new Predis_Client($GLOBALS['ciRedis']);
         if ($GLOBALS['_enableSentinel']===true) {
             //启用了redis的哨兵机制
             foreach($GLOBALS['sentinels'] as $sentinelInfo) {
