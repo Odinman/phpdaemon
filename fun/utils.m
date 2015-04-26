@@ -25,7 +25,7 @@ function _getRedisConnections() {
             foreach($GLOBALS['sentinels'] as $sentinelInfo) {
                 try {
                     $sentinelConn=new Predis\Client($sentinelInfo);
-                    if (!$masterInfo=$sentinelConn->sentinel('get-master-addr-by-name',$GLOBALS['sentinelMaster'])) {
+                    if (!$masterInfo=$sentinelConn->executeRaw('SENTINEL','get-master-addr-by-name',$GLOBALS['sentinelMaster'])) {
                         throw new Exception('Find Master Failed!');
                     }
                     _notice("[%s][master:%s][port:%s]",__FUNCTION__,$masterInfo[0], $masterInfo[1]);
