@@ -76,9 +76,12 @@ if (isset($GLOBALS['PARAMS']['t']) || isset($GLOBALS['PARAMS']['title'])) {
 
 /* {{{ load 3part lib
  */
-if ($GLOBALS['OPTIONS']['libs']['redis']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['redis'])==='yes') {
-    include_once(_DAEMON_ROOT.'lib/Predis.php');
-}
+//if ($GLOBALS['OPTIONS']['libs']['redis']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['redis'])==='yes') {
+//    include_once(_DAEMON_ROOT.'lib/Predis.php');
+//}
+//默认load predis
+include_once(_DAEMON_ROOT.'lib/predis/autoload.php');
+
 if ($GLOBALS['OPTIONS']['libs']['phpmailer']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['phpmailer'])==='yes') {
     include_once(_DAEMON_ROOT.'lib/PHPMailer/PHPMailerAutoload.php');
 }

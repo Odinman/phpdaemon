@@ -19,12 +19,12 @@ function _getRedisConnections() {
     $rt=false;
 
     do {
-        $GLOBALS['ciRedisConn'] = new Predis_Client($GLOBALS['ciRedis']);
+        $GLOBALS['ciRedisConn'] = new Predis\Client($GLOBALS['ciRedis']);
         if ($GLOBALS['_enableSentinel']===true) {
             //启用了redis的哨兵机制
             foreach($GLOBALS['sentinels'] as $sentinelInfo) {
                 try {
-                    $sentinelConn=new Predis_Client($sentinelInfo);
+                    $sentinelConn=new Predis\Client($sentinelInfo);
                     if (!$masterInfo=$sentinelConn->sentinel('get-master-addr-by-name',$GLOBALS['sentinelMaster'])) {
                         throw new Exception('Find Master Failed!');
                     }
@@ -37,16 +37,29 @@ function _getRedisConnections() {
                 } catch (Exception $e) {
                     _warn("[%s][Exception: %s]",__FUNCTION__,$e->getMessage());
                 }
-                $GLOBALS['redisConn'] = new Predis_Client($GLOBALS['redis']);
-                $GLOBALS['lockConn'] = new Predis_Client($GLOBALS['lockRedis']);
+                $GLOBALS['redisConn'] = new Predis\Client($GLOBALS['redis']);
+                $GLOBALS['lockConn'] = new Predis\Client($GLOBALS['lockRedis']);
                 $rt=true;
                 break;
             }
         } else {
-            $GLOBALS['redisConn'] = new Predis_Client($GLOBALS['redis']);
-            $GLOBALS['lockConn'] = new Predis_Client($GLOBALS['lockRedis']);
+            $GLOBALS['redisConn'] = new Predis\Client($GLOBALS['redis']);
+            $GLOBALS['lockConn'] = new Predis\Client($GLOBALS['lockRedis']);
             $rt=true;
         }
+    } while(false);
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _getRedisConn($server_info)
+ */
+function _getRedisConn($server_info) {
+    $rt=false;
+
+    do {
+        $rt=new Predis\Client($server_info);
     } while(false);
 
     return $rt;
