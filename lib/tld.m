@@ -6116,9 +6116,9 @@ function _getTLD($url) {
     $hostData = explode('.', $urlData['host']);
     $hostData = array_reverse($hostData);
 
-    if(array_search($hostData[1] . '.' . $hostData[0], $_TLD_) !== FALSE) {
+    if(array_search($hostData[1] . '.' . $hostData[0], $GLOBALS['_TLD_']) !== FALSE) {
       $host = $hostData[2] . '.' . $hostData[1] . '.' . $hostData[0];
-    } elseif(array_search($hostData[0], $_TLD_) !== FALSE) {
+    } elseif(array_search($hostData[0], $GLOBALS['_TLD_']) !== FALSE) {
       $host = $hostData[1] . '.' . $hostData[0];
     }
     return $host;
