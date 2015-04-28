@@ -96,6 +96,10 @@ if ($GLOBALS['OPTIONS']['libs']['thrift']==='1' || strtolower($GLOBALS['OPTIONS'
 	require_once($GLOBALS['THRIFT_ROOT'] . '/packages/hadoopfs/ThriftHadoopFileSystem.php');
 	require_once($GLOBALS['THRIFT_ROOT'] . '/packages/scribe/scribe.php');
 }
+
+if ($GLOBALS['OPTIONS']['libs']['tld']==='1' || strtolower($GLOBALS['OPTIONS']['libs']['tld'])==='yes') {   //tld比较大,6000多顶级域名
+    include_once(_DAEMON_ROOT.'lib/tld.m');
+}
 /* }}} */
 
 
