@@ -87,11 +87,9 @@ function _connectMysql($host,$user,$pass,$db) {
 function _mysqlExecute($mysqli, $sql) {
     $rt=false;
 
-    do {
-        if ($mysqli->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
-            return $mysqli->query($sql);
-        }
-    } while(false);
+    if ($mysqli->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        return $mysqli->query($sql);
+    }
 
     if ($rt===false) {
         _warn("[%s][query_failed: %s]",$sql);
