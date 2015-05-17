@@ -81,10 +81,18 @@ function _connectMysql($host,$user,$pass,$db) {
 }
 /* }}} */
 
+/* {{{ function _safeKey($tag)
+ *
+ */
+function _safeLinkKey($tag) {
+    return "{$tag}SafeLink";
+}
+/* }}} */
+
 /* {{{ function _connectSafeMysql($host,$user,$pass,$db)
  */
 function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
-    $linkKey="{$linkTag}SafeLink";  // adminLink,adminWLink, etc
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
     $GLOBALS[$linkKey]=array(
         'host' => $host,
         'user' => $user,
@@ -125,7 +133,7 @@ function _mysqlExecute($mysqli, $sql) {
 function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
     $rt=false;
 
-    $linkKey="{$linkTag}SafeLink";  // adminLink,adminWLink, etc
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
     if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
         return $GLOBALS[$linkKey]['link']->query($sql);
     } else {
