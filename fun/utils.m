@@ -81,6 +81,28 @@ function _connectMysql($host,$user,$pass,$db) {
 }
 /* }}} */
 
+/* {{{ function _connectSafeMysql($host,$user,$pass,$db)
+ */
+function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
+    $linkKey="{$linkTag}SafeLink";  // adminLink,adminWLink, etc
+    $GLOBALS[$linkKey]=array(
+        'host' => $host,
+        'user' => $user,
+        'pass' => $pass,
+        'db' => $db,
+    );
+    $GLOBALS[$linkKey]['link'] = mysqli_init();
+    $GLOBALS[$linkKey]['link']->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+    $GLOBALS[$linkKey]['link']->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
+    @$GLOBALS[$linkKey]['link']->real_connect($host,$user,$pass,$db);
+    if ($GLOBALS[$linkKey]['link']->connect_errno) {
+        //连接失败
+        return false;
+    }
+    return true;
+}
+/* }}} */
+
 /* {{{ function _mysqlExecute($mysqli, $sql)
  *
  */
@@ -92,6 +114,36 @@ function _mysqlExecute($mysqli, $sql) {
     }
 
     _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $mysqli->error);
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _mysqlSafeExecute($linkTag, $sql)
+ * 在mysqlnd下mysqli::ping根本无效,因此这里手动重连
+ */
+function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
+    $rt=false;
+
+    $linkKey="{$linkTag}SafeLink";  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        return $GLOBALS[$linkKey]['link']->query($sql);
+    } else {
+
+        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
+        if ($tried<2) {
+            $tried++;
+            //重连, 一次
+            $host=$GLOBALS[$linkKey]['host'];
+            $user=$GLOBALS[$linkKey]['user'];
+            $pass=$GLOBALS[$linkKey]['pass'];
+            $db=$GLOBALS[$linkKey]['db'];
+            _connectSafeMysql($host,$user,$pass,$db,$linkTag);
+            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
+            return _mysqlSafeExecute($linkTag,$sql,$tried);
+        }
+
+    }
 
     return $rt;
 }
