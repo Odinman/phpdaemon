@@ -91,7 +91,7 @@ function _mysqlExecute($mysqli, $sql) {
         return $mysqli->query($sql);
     }
 
-    _warn("[%s][query_failed: %s]",$sql, $mysqli->error);
+    _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $mysqli->error);
 
     return $rt;
 }
