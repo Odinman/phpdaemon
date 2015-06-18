@@ -66,6 +66,23 @@ function _getRedisConn($server_info) {
 }
 /* }}} */
 
+/* {{{ function _getRedisCluster($servers)
+ */
+function _getRedisCluster($servers) {
+    $rt=false;
+
+    do {
+        if (empty($servers)) {
+            _warn("[%s][not_found_any_server]",__FUNCTION__);
+            break;
+        }
+        $rt=new Predis\Client($servers,['cluster' => 'redis']);
+    } while(false);
+
+    return $rt;
+}
+/* }}} */
+
 /* {{{ function _connectMysql($host,$user,$pass,$db)
  */
 function _connectMysql($host,$user,$pass,$db) {
