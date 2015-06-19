@@ -220,6 +220,160 @@ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0) {
 }
 /* }}} */
 
+/* {{{ function _easyLock($ID,$lockTimeout=0)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+ * @param resource $conn, redis连接
+ * @param int $ID, 锁ID
+ * @param string $checksum
+ */
+function _easyLock($ID,$lockTimeout=0) {
+    $rt=false;
+
+    $lockTimeout=(int)$lockTimeout>0?(int)$lockTimeout:30;
+
+    do {
+        if (empty($ID)) {
+            _warn("[%s][no_id]",__FUNCTION__);
+            break;
+        }
+        if (isset($GLOBALS['RCC'])) {
+            $conn=$GLOBALS['RCC'];
+        } else {
+            $conn=$GLOBALS['lockConn'];
+        }
+        $checksum=_createUUID();
+        $now=time();
+        $lockKey=_getSpaceName('_lock_',$ID);
+
+        $conn->watch($lockKey);
+        if ($currentLock=$conn->get($lockKey)) {    //存在锁
+            list($currentLockTime,$currentCS)=explode(',',$currentLock);
+            if ($currentLockTime>$now) {    //当前有锁且没有过期,失败
+                $conn->unwatch();
+                break;
+            }
+        }
+
+        //key不存在,或者已经过期
+        $lockTime=$now+$lockTimeout;
+        $lockStr=$lockTime.','.$checksum;
+        $conn->multi();
+        $conn->set($lockKey,$lockStr);
+        if (!$conn->exec()) {    //很不幸,被抢了
+            _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
+            break;
+        }
+        _warn("[%s][%s][get_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
+        $rt=$checksum;
+    } while(false);
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _easyRenew($ID,$checksum,$lockTimeout=0)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+ * @param resource $conn, redis连接
+ * @param int $ID, 锁ID
+ * @param string $checksum
+ */
+function _easyRenew($ID,$checksum,$lockTimeout=0) {
+    $rt=false;
+
+    $lockTimeout=(int)$lockTimeout>0?(int)$lockTimeout:300;
+
+    do {
+        if (empty($ID)) {
+            break;
+        }
+        if (isset($GLOBALS['RCC'])) {
+            $conn=$GLOBALS['RCC'];
+        } else {
+            $conn=$GLOBALS['lockConn'];
+        }
+        $now=time();
+        $lockKey=_getSpaceName('_lock_',$ID);
+
+        $conn->watch($lockKey);
+        if (!$currentLock=$conn->get($lockKey)) {    //锁没了
+            $conn->unwatch();
+            break;
+        }
+        list($currentLockTime,$currentCS)=explode(',',$currentLock);
+        if ($currentLockTime<$now) {    //过期
+            $conn->unwatch();
+            break;
+        } elseif ($currentCS!=$checksum) {    //owner不是自己
+            $conn->unwatch();
+            break;
+        } 
+
+        //key存在,并且没有过期,更新之
+        $lockTime=$now+$lockTimeout;
+        $lockStr=$lockTime.','.$checksum;
+        $conn->multi();
+        $conn->set($lockKey,$lockStr);
+        if (!$conn->exec()) {    //很不幸,被抢了
+            _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
+            break;
+        }
+        _warn("[%s][%s][renew_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
+        $rt=true;
+    } while(false);
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _easyRelease($ID,$checksum)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+ * @param resource $conn, redis连接
+ * @param int $ID, 锁ID
+ * @param string $checksum
+ */
+function _easyRelease($ID,$checksum) {
+    $rt=false;
+
+    do {
+        if (empty($ID)) {
+            break;
+        }
+        if (isset($GLOBALS['RCC'])) {
+            $conn=$GLOBALS['RCC'];
+        } else {
+            $conn=$GLOBALS['lockConn'];
+        }
+        $now=time();
+        $lockKey=_getSpaceName('_lock_',$ID);
+
+        $conn->watch($lockKey);
+        if (!$currentLock=$conn->get($lockKey)) {    //锁没了
+            $conn->unwatch();
+            break;
+        }
+        list($currentLockTime,$currentCS)=explode(',',$currentLock);
+        if ($currentLockTime<$now) {    //过期
+            $conn->unwatch();
+            break;
+        } elseif ($currentCS!=$checksum) {    //owner不是自己
+            $conn->unwatch();
+            break;
+        } 
+        //锁没有过期并且owner是自己
+        $conn->multi();
+        $conn->del($lockKey);
+        if (!$conn->exec()) {    // 删除成功
+            _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
+            break;
+        }
+        $rt=true;
+        _warn("[%s][%s][release_it!][checksum: %s]",__FUNCTION__,$lockKey,$checksum);
+    } while(false);
+
+    return $rt;
+}
+/* }}} */
+
 /* {{{ function _renewLock($conn,$ID,$checksum,$lockPrefix=null,$lockTimeout=0)
  * 更新锁
  * @param resource $conn, redis连接
@@ -411,4 +565,24 @@ function _getRemoteContent($url) {
     return $rt;
 }
 
+/* }}} */
+
+/* {{{ function _getSpaceName($prefix,$tag=null) {
+ * 获取缓存key,这里支持name space
+ */
+function _getSpaceName($prefix,$tag=null) {
+    $rt=false;
+
+    do {
+        if (empty($prefix)) {
+            break;
+        }
+        $rt=$prefix.$GLOBALS['NS_SUFFIX'];  // 如果存在namespace
+        if (!empty($tag)) {
+            $rt.=":{$tag}";
+        }
+    } while(false);
+
+    return $rt;
+}
 /* }}} */
