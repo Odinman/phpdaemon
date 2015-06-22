@@ -594,6 +594,16 @@ function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
 }
 /* }}} */
 
+/* {{{ function _safeAffectedRows($linkTag)
+ * 
+ */
+function _safeAffectedRows($linkTag) {
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    return $GLOBALS[$linkKey]['link']->affectd_rows;
+}
+/* }}} */
+
 /* {{{ function _beginSafeTransaction($linkTag,$tried=0) 
  *
  */
