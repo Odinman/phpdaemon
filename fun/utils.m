@@ -541,6 +541,7 @@ function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
     @$GLOBALS[$linkKey]['link']->real_connect($host,$user,$pass,$db);
     if ($GLOBALS[$linkKey]['link']->connect_errno) {
         //连接失败
+        _error("[%s]connect %s error: %s",__FUNCTION__,$linkTag,$GLOBALS[$linkKey]['link']->error);
         return false;
     }
     return true;
