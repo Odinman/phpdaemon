@@ -83,97 +83,6 @@ function _getRedisCluster($servers) {
 }
 /* }}} */
 
-/* {{{ function _connectMysql($host,$user,$pass,$db)
- */
-function _connectMysql($host,$user,$pass,$db) {
-    $rt = mysqli_init();
-    $rt->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
-    $rt->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
-    @$rt->real_connect($host,$user,$pass,$db);
-    if ($rt->connect_errno) {
-        //连接失败
-        return false;
-    }
-    return $rt;
-}
-/* }}} */
-
-/* {{{ function _safeKey($tag)
- *
- */
-function _safeLinkKey($tag) {
-    return "{$tag}SafeLink";
-}
-/* }}} */
-
-/* {{{ function _connectSafeMysql($host,$user,$pass,$db)
- */
-function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
-    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
-    $GLOBALS[$linkKey]=array(
-        'host' => $host,
-        'user' => $user,
-        'pass' => $pass,
-        'db' => $db,
-    );
-    $GLOBALS[$linkKey]['link'] = mysqli_init();
-    $GLOBALS[$linkKey]['link']->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
-    $GLOBALS[$linkKey]['link']->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
-    @$GLOBALS[$linkKey]['link']->real_connect($host,$user,$pass,$db);
-    if ($GLOBALS[$linkKey]['link']->connect_errno) {
-        //连接失败
-        return false;
-    }
-    return true;
-}
-/* }}} */
-
-/* {{{ function _mysqlExecute($mysqli, $sql)
- *
- */
-function _mysqlExecute($mysqli, $sql) {
-    $rt=false;
-
-    if ($mysqli->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
-        return $mysqli->query($sql);
-    }
-
-    _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $mysqli->error);
-
-    return $rt;
-}
-/* }}} */
-
-/* {{{ function _mysqlSafeExecute($linkTag, $sql)
- * 在mysqlnd下mysqli::ping根本无效,因此这里手动重连
- */
-function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
-    $rt=false;
-
-    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
-    if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
-        return $GLOBALS[$linkKey]['link']->query($sql);
-    } else {
-
-        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
-        if ($tried<2) {
-            $tried++;
-            //重连, 一次
-            $host=$GLOBALS[$linkKey]['host'];
-            $user=$GLOBALS[$linkKey]['user'];
-            $pass=$GLOBALS[$linkKey]['pass'];
-            $db=$GLOBALS[$linkKey]['db'];
-            _connectSafeMysql($host,$user,$pass,$db,$linkTag);
-            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
-            return _mysqlSafeExecute($linkTag,$sql,$tried);
-        }
-
-    }
-
-    return $rt;
-}
-/* }}} */
-
 /* {{{ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0)
  * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
  * @param resource $conn, redis连接
@@ -586,6 +495,161 @@ function _getSpaceName($prefix,$tag=null) {
             $rt.=":{$tag}";
         }
     } while(false);
+
+    return $rt;
+}
+/* }}} */
+
+
+// mysql
+/* {{{ function _connectMysql($host,$user,$pass,$db)
+ */
+function _connectMysql($host,$user,$pass,$db) {
+    $rt = mysqli_init();
+    $rt->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+    $rt->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
+    @$rt->real_connect($host,$user,$pass,$db);
+    if ($rt->connect_errno) {
+        //连接失败
+        return false;
+    }
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _safeKey($tag)
+ *
+ */
+function _safeLinkKey($tag) {
+    return "{$tag}SafeLink";
+}
+/* }}} */
+
+/* {{{ function _connectSafeMysql($host,$user,$pass,$db)
+ */
+function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    $GLOBALS[$linkKey]=array(
+        'host' => $host,
+        'user' => $user,
+        'pass' => $pass,
+        'db' => $db,
+    );
+    $GLOBALS[$linkKey]['link'] = mysqli_init();
+    $GLOBALS[$linkKey]['link']->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+    $GLOBALS[$linkKey]['link']->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
+    @$GLOBALS[$linkKey]['link']->real_connect($host,$user,$pass,$db);
+    if ($GLOBALS[$linkKey]['link']->connect_errno) {
+        //连接失败
+        return false;
+    }
+    return true;
+}
+/* }}} */
+
+/* {{{ function _mysqlExecute($mysqli, $sql)
+ *
+ */
+function _mysqlExecute($mysqli, $sql) {
+    $rt=false;
+
+    if ($mysqli->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        return $mysqli->query($sql);
+    }
+
+    _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $mysqli->error);
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _mysqlSafeExecute($linkTag, $sql)
+ * 在mysqlnd下mysqli::ping根本无效,因此这里手动重连
+ */
+function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
+    $rt=false;
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        return $GLOBALS[$linkKey]['link']->query($sql);
+    } else {
+
+        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
+        if ($GLOBALS[$linkKey]['transaction_in_progress']!==true && $tried<2) { // trasaction要求不能断线
+            $tried++;
+            //重连, 一次
+            $host=$GLOBALS[$linkKey]['host'];
+            $user=$GLOBALS[$linkKey]['user'];
+            $pass=$GLOBALS[$linkKey]['pass'];
+            $db=$GLOBALS[$linkKey]['db'];
+            _connectSafeMysql($host,$user,$pass,$db,$linkTag);
+            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
+            return _mysqlSafeExecute($linkTag,$sql,$tried);
+        }
+
+    }
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _beginSafeTransaction($linkTag,$tried=0) 
+ *
+ */
+function _beginSafeTransaction($linkTag,$tried=0) {
+    $rt=false;
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        $GLOBALS[$linkKey]['transaction_in_progress']=true;
+        return $GLOBALS[$linkKey]['link']->autocommit(false);
+    } else {
+        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
+        if ($tried<2) {
+            $tried++;
+            //重连, 一次
+            $host=$GLOBALS[$linkKey]['host'];
+            $user=$GLOBALS[$linkKey]['user'];
+            $pass=$GLOBALS[$linkKey]['pass'];
+            $db=$GLOBALS[$linkKey]['db'];
+            _connectSafeMysql($host,$user,$pass,$db,$linkTag);
+            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
+            return _beginTransaction($linkTag,$tried);
+        }
+
+    }
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _safeCommit($linkTag) 
+ *
+ */
+function _safeCommit($linkTag) {
+    $rt=false;
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['link']->ping()) {
+        $GLOBALS[$linkKey]['transaction_in_progress']=false;
+        return $GLOBALS[$linkKey]['link']->commit();
+    }
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _safeRollback($linkTag) 
+ *
+ */
+function _safeRollback($linkTag) {
+    $rt=false;
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['link']->ping()) {
+        $GLOBALS[$linkKey]['transaction_in_progress']=false;
+        return $GLOBALS[$linkKey]['link']->rollback();
+    }
 
     return $rt;
 }
