@@ -214,6 +214,7 @@ function _debug($debugData,$debugLevel=_DLV_INFO,$sysLog=true) {
 function _info() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_INFO);
+    return $data;
 }
 /* }}} */
 
@@ -223,6 +224,7 @@ function _info() {
 function _notice() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_NOTICE);
+    return $data;
 }
 /* }}} */
 
@@ -232,6 +234,7 @@ function _notice() {
 function _warn() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_WARNING);
+    return $data;
 }
 /* }}} */
 
@@ -241,6 +244,7 @@ function _warn() {
 function _error() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_ERROR);
+    return $data;
 }
 /* }}} */
 
@@ -250,6 +254,7 @@ function _error() {
 function _crit() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_CRIT);
+    return $data;
 }
 /* }}} */
 
@@ -259,6 +264,7 @@ function _crit() {
 function _alert() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_ALERT);
+    return $data;
 }
 /* }}} */
 
@@ -268,5 +274,6 @@ function _alert() {
 function _emerg() {
     $data = call_user_func_array("sprintf",func_get_args());
     _debug($data, _DLV_EMERG);
+    return $data;
 }
 /* }}} */
