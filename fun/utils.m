@@ -604,6 +604,16 @@ function _safeAffectedRows($linkTag) {
 }
 /* }}} */
 
+/* {{{ function _safeError($linkTag)
+ * 
+ */
+function _safeError($linkTag) {
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    return $GLOBALS[$linkKey]['link']->error;
+}
+/* }}} */
+
 /* {{{ function _beginSafeTransaction($linkTag,$tried=0) 
  *
  */
