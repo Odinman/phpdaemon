@@ -500,7 +500,6 @@ function _getSpaceName($prefix,$tag=null) {
 }
 /* }}} */
 
-
 // mysql
 /* {{{ function _connectMysql($host,$user,$pass,$db)
  */
