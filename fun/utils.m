@@ -160,24 +160,27 @@ function _easyLock($ID,$lockTimeout=0) {
             $conn->watch($lockKey);
             if ($currentLock=$conn->get($lockKey)) {    //存在锁
                 list($currentLockTime,$currentCS)=explode(',',$currentLock);
+                _warn("[%s][key: %s][currentLockTime: %s][currentCS: %s][now: %s]",__FUNCTION__,$lockKey,$currentLockTime,$currentCS,$now);
                 if ($currentLockTime>$now) {    //当前有锁且没有过期,失败
                     $conn->unwatch();
-                }
-            } else {
-                //key不存在,或者已经过期
-                $lockTime=$now+$lockTimeout;
-                $lockStr=$lockTime.','.$checksum;
-                $conn->multi();
-                $conn->set($lockKey,$lockStr);
-                if (!$conn->exec()) {    //很不幸,被抢了
-                    _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
-                } else {
-                    _warn("[%s][%s][get_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
-                    $rt=$checksum;
-                    break;
+                    usleep(500000); //500 ms
+                    continue;
                 }
             }
-            usleep(500000); //500 ms
+            //key不存在,或者已经过期
+            $lockTime=$now+$lockTimeout;
+            $lockStr=$lockTime.','.$checksum;
+            $conn->multi();
+            $conn->set($lockKey,$lockStr);
+            $conn->expire($lockKey,600);
+            if (!$conn->exec()) {    //很不幸,被抢了
+                usleep(500000); //500 ms
+                _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
+            } else {
+                _warn("[%s][%s][get_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
+                $rt=$checksum;
+                break;
+            }
         }
     } while(false);
 
