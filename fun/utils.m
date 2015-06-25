@@ -602,7 +602,7 @@ function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
 function _safeAffectedRows($linkTag) {
 
     $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
-    return $GLOBALS[$linkKey]['link']->affectd_rows;
+    return $GLOBALS[$linkKey]['link']->affected_rows;
 }
 /* }}} */
 
