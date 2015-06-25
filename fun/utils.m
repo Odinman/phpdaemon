@@ -137,7 +137,7 @@ function _getLock($conn,$ID,$checksum, $lockPrefix=null,$lockTimeout=0) {
 function _easyLock($ID,$lockTimeout=0) {
     $rt=false;
 
-    $lockTimeout=(int)$lockTimeout>0?(int)$lockTimeout:30;
+    $lockTimeout=(int)$lockTimeout>0?(int)$lockTimeout:10;  //10秒过期
     $retry=$GLOBALS['_tryLock']>0?$GLOBALS['_tryLock']:5;
 
     do {
@@ -153,89 +153,41 @@ function _easyLock($ID,$lockTimeout=0) {
         $checksum=_createUUID();
         $now=time();
         $lockKey=_getSpaceName('_lock_',$ID);
+        $lockTime=$now+$lockTimeout;
+        $lockStr=$lockTime.','.$checksum;
 
         $tried=0;
         while($tried<$retry) {
             $tried++;
-            $conn->watch($lockKey);
-            if ($currentLock=$conn->get($lockKey)) {    //存在锁
-                list($currentLockTime,$currentCS)=explode(',',$currentLock);
-                _warn("[%s][key: %s][currentLockTime: %s][currentCS: %s][now: %s]",__FUNCTION__,$lockKey,$currentLockTime,$currentCS,$now);
-                if ($currentLockTime>$now) {    //当前有锁且没有过期,失败
-                    $conn->unwatch();
-                    usleep(500000); //500 ms
-                    continue;
-                }
-            }
-            //key不存在,或者已经过期
-            $lockTime=$now+$lockTimeout;
-            $lockStr=$lockTime.','.$checksum;
-            $conn->multi();
-            $conn->set($lockKey,$lockStr);
-            $conn->expire($lockKey,600);
-            if (!$conn->exec()) {    //很不幸,被抢了
-                usleep(500000); //500 ms
-                _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
-            } else {
-                _warn("[%s][%s][get_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
+            if ($conn->setnx($lockKey,$lockStr)) {
+                //获取锁
+                _warn("[%s][%s][get_it!][%s][expire: %s]",__FUNCTION__,$lockKey,$lockStr,date('Y-m-d H:i:s',$lockTime));
                 $rt=$checksum;
                 break;
             }
+            //锁存在,查看是否过期
+            if ($currentLock=$conn->get($lockKey)) {
+                list($currentLockTime,$currentCS)=explode(',',$currentLock);
+                _warn("[%s][key: %s][currentLockTime: %s][currentCS: %s][now: %s]",__FUNCTION__,$lockKey,$currentLockTime,$currentCS,$now);
+                if ($now>$currentLockTime) {
+                    //过期了,抢
+                    if ($lock=$conn->getset($lockKey,$lockStr)) {
+                        if ($lock==$currentLock) {
+                            //抢到了
+                            _warn("[%s][%s][get_it!][last: %s][new: %s][expire: %s]",__FUNCTION__,$lockKey,$currentLock,$lockStr,date('Y-m-d H:i:s',$lockTime));
+                            $rt=$checksum;
+                            break;
+                        } else {
+                            //没抢到,但是覆盖了别人的锁
+                        }
+                    } else {
+                        _error("[%s][strange_situation!!]",__FUNCTION__);
+                        break;
+                    }
+                }
+            }
+            usleep(50000); //50 ms
         }
-    } while(false);
-
-    return $rt;
-}
-/* }}} */
-
-/* {{{ function _easyRenew($ID,$checksum,$lockTimeout=0)
- * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
- * @param int $ID, 锁ID
- * @param string $checksum
- * @param int $lockTImeout
- */
-function _easyRenew($ID,$checksum,$lockTimeout=0) {
-    $rt=false;
-
-    $lockTimeout=(int)$lockTimeout>0?(int)$lockTimeout:300;
-
-    do {
-        if (empty($ID)) {
-            break;
-        }
-        if (isset($GLOBALS['RCC'])) {
-            $conn=$GLOBALS['RCC'];
-        } else {
-            $conn=$GLOBALS['lockConn'];
-        }
-        $now=time();
-        $lockKey=_getSpaceName('_lock_',$ID);
-
-        $conn->watch($lockKey);
-        if (!$currentLock=$conn->get($lockKey)) {    //锁没了
-            $conn->unwatch();
-            break;
-        }
-        list($currentLockTime,$currentCS)=explode(',',$currentLock);
-        if ($currentLockTime<$now) {    //过期
-            $conn->unwatch();
-            break;
-        } elseif ($currentCS!=$checksum) {    //owner不是自己
-            $conn->unwatch();
-            break;
-        } 
-
-        //key存在,并且没有过期,更新之
-        $lockTime=$now+$lockTimeout;
-        $lockStr=$lockTime.','.$checksum;
-        $conn->multi();
-        $conn->set($lockKey,$lockStr);
-        if (!$conn->exec()) {    //很不幸,被抢了
-            _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
-            break;
-        }
-        _warn("[%s][%s][renew_it!][checksum: %s][expire: %s]",__FUNCTION__,$lockKey,$checksum,date('Y-m-d H:i:s',$lockTime));
-        $rt=true;
     } while(false);
 
     return $rt;
@@ -259,29 +211,9 @@ function _easyRelease($ID,$checksum) {
         } else {
             $conn=$GLOBALS['lockConn'];
         }
-        $now=time();
         $lockKey=_getSpaceName('_lock_',$ID);
 
-        $conn->watch($lockKey);
-        if (!$currentLock=$conn->get($lockKey)) {    //锁没了
-            $conn->unwatch();
-            break;
-        }
-        list($currentLockTime,$currentCS)=explode(',',$currentLock);
-        if ($currentLockTime<$now) {    //过期
-            $conn->unwatch();
-            break;
-        } elseif ($currentCS!=$checksum) {    //owner不是自己
-            $conn->unwatch();
-            break;
-        } 
-        //锁没有过期并且owner是自己
-        $conn->multi();
         $conn->del($lockKey);
-        if (!$conn->exec()) {    // 删除成功
-            _warn("[%s][%s][get_failed]",__FUNCTION__,$lockKey);
-            break;
-        }
         $rt=true;
         _warn("[%s][%s][release_it!][checksum: %s]",__FUNCTION__,$lockKey,$checksum);
     } while(false);
