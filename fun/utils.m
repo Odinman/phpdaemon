@@ -538,6 +538,16 @@ function _safeAffectedRows($linkTag) {
 }
 /* }}} */
 
+/* {{{ function _safeInsertId($linkTag)
+ * 
+ */
+function _safeInsertId($linkTag) {
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    return $GLOBALS[$linkKey]['link']->insert_id;
+}
+/* }}} */
+
 /* {{{ function _safeError($linkTag)
  * 
  */
@@ -555,11 +565,17 @@ function _beginSafeTransaction($linkTag,$tried=0) {
     $rt=false;
 
     $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['transaction_in_progress']===true) {
+        //已经在transaction里面了
+        $GLOBALS[$linkKey]['transaction_depth']+=1;
+        return true;
+    }
     if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
         $GLOBALS[$linkKey]['transaction_in_progress']=true;
+        $GLOBALS[$linkKey]['transaction_depth']=0;
         return $GLOBALS[$linkKey]['link']->autocommit(false);
     } else {
-        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
+        _warn("[%s][%s][begin_transaction_failed: %s]",__FUNCTION__,$linkKey, $GLOBALS[$linkKey]['link']->error);
         if ($tried<2) {
             $tried++;
             //重连, 一次
@@ -585,8 +601,14 @@ function _safeCommit($linkTag) {
     $rt=false;
 
     $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['transaction_depth']>0) {
+        //在transaction嵌套中
+        $GLOBALS[$linkKey]['transaction_depth']-=1;
+        return true;
+    }
     if ($GLOBALS[$linkKey]['link']->ping()) {
         $GLOBALS[$linkKey]['transaction_in_progress']=false;
+        $GLOBALS[$linkKey]['transaction_depth']=0;
         return $GLOBALS[$linkKey]['link']->commit();
     }
 
@@ -601,8 +623,14 @@ function _safeRollback($linkTag) {
     $rt=false;
 
     $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    if ($GLOBALS[$linkKey]['transaction_depth']>0) {
+        //在transaction嵌套中
+        $GLOBALS[$linkKey]['transaction_depth']-=1;
+        return true;
+    }
     if ($GLOBALS[$linkKey]['link']->ping()) {
         $GLOBALS[$linkKey]['transaction_in_progress']=false;
+        $GLOBALS[$linkKey]['transaction_depth']=0;
         return $GLOBALS[$linkKey]['link']->rollback();
     }
 
