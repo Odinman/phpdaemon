@@ -571,6 +571,7 @@ function _beginSafeTransaction($linkTag,$tried=0) {
         return true;
     }
     if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        _info("[%s][begin]",__FUNCTION__);
         $GLOBALS[$linkKey]['transaction_in_progress']=true;
         $GLOBALS[$linkKey]['transaction_depth']=0;
         return $GLOBALS[$linkKey]['link']->autocommit(false);
@@ -584,10 +585,9 @@ function _beginSafeTransaction($linkTag,$tried=0) {
             $pass=$GLOBALS[$linkKey]['pass'];
             $db=$GLOBALS[$linkKey]['db'];
             _connectSafeMysql($host,$user,$pass,$db,$linkTag);
-            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
-            return _beginTransaction($linkTag,$tried);
+            _warn("[%s][reconnect:%s][tried:%s][host: %s]",__FUNCTION__,$linkTag,$tried,$host);
+            return _beginSafeTransaction($linkTag,$tried);
         }
-
     }
 
     return $rt;
@@ -632,6 +632,75 @@ function _safeRollback($linkTag) {
         $GLOBALS[$linkKey]['transaction_in_progress']=false;
         $GLOBALS[$linkKey]['transaction_depth']=0;
         return $GLOBALS[$linkKey]['link']->rollback();
+    }
+
+    return $rt;
+}
+/* }}} */
+
+// safe lock
+/* {{{ function _safeLock($ID,$lockTimeout=0)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+ * @param int $ID, 锁ID
+ * @param int $lockTimeout
+ */
+function _safeLock($ID,$lockTimeout=0) {
+    $rt=false;
+
+    if (empty($ID)) {
+        return false;
+    }
+    if ($GLOBALS['_LOCK_'][$ID]['locked']===true) { //当前进程已经get到lock
+        $GLOBALS['_LOCK_'][$ID]['depth']+=1;
+        return true;
+    }
+
+    try {
+        if (false==($lcs=_easyLock($ID,$lockTimeout))) {
+            throw new Exception(_info("[%s][get_lock_failed: %s]",__FUNCTION__,$ID));
+        }
+        $GLOBALS['_LOCK_'][$ID]['locked']=true;
+        $GLOBALS['_LOCK_'][$ID]['checksum']=$lcs;
+        $GLOBALS['_LOCK_'][$ID]['ts']=time();
+        $GLOBALS['_LOCK_'][$ID]['timeout']=$lockTimeout;
+        $GLOBALS['_LOCK_'][$ID]['depth']=0;
+        $rt=true;
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+/* }}} */
+
+/* {{{ function _safeRelease($ID)
+ * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
+ * @param int $ID, 锁ID
+ * @param string $checksum
+ */
+function _safeRelease($ID) {
+    $rt=false;
+
+    if (empty($ID)) {
+        return false;
+    }
+    if ($GLOBALS['_LOCK_'][$ID]['locked']!==true) {
+        return false;
+    }
+    if ($GLOBALS['_LOCK_'][$ID]['depth']>0) { //当前进程已经get到lock
+        $GLOBALS['_LOCK_'][$ID]['depth']-=1;
+        return true;
+    }
+
+    try {
+        $lcs=$GLOBALS['_LOCK_'][$ID]['checksum'];
+        unset($GLOBALS['_LOCK_'][$ID]); //不管是否成功,$GLOBALS['_LOCK_'][$ID]都必须消失
+        if (false==_easyRelease($ID,$lcs)) {
+            throw new Exception(_info("[%s][get_lock_failed: %s]",__FUNCTION__,$ID));
+        }
+        $rt=true;
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
     }
 
     return $rt;
