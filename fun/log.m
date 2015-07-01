@@ -179,6 +179,9 @@ function _debug($debugData,$debugLevel=_DLV_INFO,$sysLog=true) {
         if (!empty($GLOBALS['_daemon']['title'])) {
             $dataPrefix.="[{$GLOBALS['_daemon']['title']}]";
         }
+        if (!empty($GLOBALS['_custom_prefix_'])) {
+            $dataPrefix.="[{$GLOBALS['_custom_prefix_']}]";
+        }
         if (!empty($dataPrefix)) {
             $dataPrefix.=' ';
         }
@@ -207,6 +210,16 @@ function _debug($debugData,$debugLevel=_DLV_INFO,$sysLog=true) {
 /* }}} */
 
 // format形式的debug日志记录
+
+/* {{{ function _setLogprefix($prefix)
+ *
+ */
+function _setLogPrefix($prefix) {
+    $GLOBALS['_custom_prefix_']=$prefix;
+}
+
+/* }}} */
+
 
 /* {{{ function _info() {
  * 记录info级别的日志

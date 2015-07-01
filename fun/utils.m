@@ -609,7 +609,8 @@ function _safeCommit($linkTag) {
     if ($GLOBALS[$linkKey]['link']->ping()) {
         $GLOBALS[$linkKey]['transaction_in_progress']=false;
         $GLOBALS[$linkKey]['transaction_depth']=0;
-        return $GLOBALS[$linkKey]['link']->commit();
+        $GLOBALS[$linkKey]['link']->commit();
+        return $GLOBALS[$linkKey]['link']->autocommit(true);
     }
 
     return $rt;
@@ -631,7 +632,8 @@ function _safeRollback($linkTag) {
     if ($GLOBALS[$linkKey]['link']->ping()) {
         $GLOBALS[$linkKey]['transaction_in_progress']=false;
         $GLOBALS[$linkKey]['transaction_depth']=0;
-        return $GLOBALS[$linkKey]['link']->rollback();
+        $GLOBALS[$linkKey]['link']->rollback();
+        return $GLOBALS[$linkKey]['link']->autocommit(true);
     }
 
     return $rt;
