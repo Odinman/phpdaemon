@@ -338,19 +338,71 @@ function _createUUID($namespace = '') {
 }
 /* }}} */
 
+/* {{{ function _bcDivMod($x, $y, $base=10)
+ * 大数字除法(商+余数)
+ */
+function _bcDivMod($x, $y, $base=10) { 
+    $rt=false;
+    // how many numbers to take at once? carefull not to exceed (int) 
+    $take = 3;
+    $mod = ''; 
+
+    $quotient=0;
+    $first=true;
+    do { 
+        $a = $mod.substr( $x, 0, $take ); 
+        $take=strlen($x)>=$take?$take:strlen($x);
+        $x = substr( $x, $take ); 
+        $mod = base_convert($a,$base,10) % $y;
+        $tq=base_convert((base_convert($a,$base,10)-$mod)/$y,10,$base);
+        $mod=base_convert($mod,10,$base);
+        if ($first) {
+            $q=$tq;
+            $first=false;
+        } else {
+            $q=sprintf("%0{$take}s",$tq);
+        }
+        if (!empty($quotient)) {
+            $quotient.=$q;
+        } else {
+            $quotient=$q;
+        }
+        //echo "infunction: $q $quotient \n";
+    } while ( strlen($x) ); 
+    $rt=array(
+        'mod' => base_convert($mod,$base,10),
+        'quotient' => $quotient,
+    );
+    //echo "function result: {$mod} {$rt['mod']} {$quotient} {$rt['quotient']}\n";
+
+    return $rt;
+}
+
+/* }}} */
+
 /* {{{ function _shortenUUID($uuid)
  *
  */
 function _shortenUUID($uuid) {
     $rt=false;
+    //去掉0,1,大写O,小写l
     $alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    $shortLen = 22;
 
     try {
         if (empty($uuid)) {
-            $rt="";
             throw new Exception(_info("[%s][long_uuid_empty]",__FUNCTION__));
         }
+        $rt="";
         $uuid=str_replace("-","",$uuid);
+        $quotient=$uuid;
+        while(!empty($quotient)) {
+            $divmod=_bcDivMod($quotient,strlen($alphabet),16);
+            $quotient=$divmod['quotient'];
+            $offset=$divmod['mod'];
+            $rt.=$alphabet[$offset];
+        }
+        $rt=str_pad($rt,$shortLen,$alphabet[0]);
     } catch (Exception $e) {
         _error("Exception: %s", $e->getMessage());
     }
@@ -359,7 +411,6 @@ function _shortenUUID($uuid) {
 }
 
 /* }}} */
-
 
 /* {{{ function _getFileExt($mimetype)
  */
