@@ -338,6 +338,29 @@ function _createUUID($namespace = '') {
 }
 /* }}} */
 
+/* {{{ function _shortenUUID($uuid)
+ *
+ */
+function _shortenUUID($uuid) {
+    $rt=false;
+    $alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+    try {
+        if (empty($uuid)) {
+            $rt="";
+            throw new Exception(_info("[%s][long_uuid_empty]",__FUNCTION__));
+        }
+        $uuid=str_replace("-","",$uuid);
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+
 /* {{{ function _getFileExt($mimetype)
  */
 function _getFileExt($mimetype) {
