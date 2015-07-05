@@ -800,7 +800,7 @@ function _tcIncr($name,$journal,$amount,$totalField="_total_") {
 
 /* }}} */
 
-/* {{{ function _tcClearJournal($key,$journal,$amount,$totalField)
+/* {{{ function _tcClearJournal($name,$journal,$amount,$totalField)
  * 清除暂扣(实际扣除/扣除作废)
  */
 function _tcClearJournal($name,$journal,$iAmount,$totalField="_total_") {
