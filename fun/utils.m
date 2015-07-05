@@ -782,3 +782,67 @@ function _safeRelease($ID) {
     return $rt;
 }
 /* }}} */
+
+// temporary deduction
+/* {{{ function _tcIncr($name,$journal,$amount,$totalField="_total_")
+ * 进行暂扣
+ */
+function _tcIncr($name,$journal,$amount,$totalField="_total_") {
+    $rt=false;
+
+    try {
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _tcClearJournal($key,$journal,$amount,$totalField)
+ * 清除暂扣(实际扣除/扣除作废)
+ */
+function _tcClearJournal($name,$journal,$iAmount,$totalField="_total_") {
+    $rt=false;
+
+    try {
+        if (empty($name)) {
+            throw new Exception(_info("[%s][name_empty]",__FUNCTION__));
+        }
+        if (isset($GLOBALS['RCC'])) {
+            $conn=$GLOBALS['RCC'];
+        } else {
+            $conn=$GLOBALS['lockConn'];
+        }
+        if ($conn->hexists($name,$journal)) {
+            if (false===($amount=$conn->hget($name,$journal))) {
+                throw new Exception(_info("[%s][tc: %s][journal: %s][get_failed]",__FUNCTION__,$name,$journal));
+            }
+            _notice("[%s][tc: %s][journal: %s][amount: %s]",__FUNCTION__,$name,$journal,$amount);
+            if ($amount!=$iAmount) {
+                _warn("[%s][tc: %s][journal: %s][amount: %f][input_amount: %f][diff!]",__FUNCTION__,$name,$journal,$amount,$iAmount);
+            }
+            //删除journal
+            if (false==$conn->hdel($name,$journal)) {
+                throw new Exception(_info("[%s][tc: %s][journal: %s][del_failed]",__FUNCTION__,$name,$journal));
+            }
+            //更新总数
+            if (false===$conn->hincrbyfloat($name,$totalField,-$amount)) {
+                throw new Exception(_info("[%s][tc: %s][journal: %s][amount: %s][upate_failed]",__FUNCTION__,$name,$journal,$mount));
+            }
+            $rt=$amount;
+        } else {
+            //不需要清除,返回成功
+            _warn("[%s][tc: %s][journal: %s][not_exists_and_not_need_clear]",__FUNCTION__,$name,$journal);
+            $rt=$iAmount;
+        }
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
