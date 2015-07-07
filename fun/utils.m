@@ -783,7 +783,7 @@ function _safeRelease($ID) {
 }
 /* }}} */
 
-// temporary deduction
+// temporary counter
 /* {{{ function _tcIncr($name,$journal,$amount,$totalField="_total_")
  * 进行暂扣
  */
