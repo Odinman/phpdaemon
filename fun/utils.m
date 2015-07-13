@@ -579,6 +579,7 @@ function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
     $rt=false;
 
     $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    //_notice("[%s][tag:%s][key:%s]",__FUNCTION__,$linkTag,$linkKey);
     if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
         return $GLOBALS[$linkKey]['link']->query($sql);
     } else {

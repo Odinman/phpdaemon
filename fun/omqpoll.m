@@ -17,9 +17,10 @@
  *
  */
 function _getOmqPoller($host,$port) {
-    $name=substr(_shortenUUID(_createUUID()),0,10);
-    //$queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ, "MySock1");
-    $queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ, $name);
+    //$name=substr(_shortenUUID(_createUUID()),0,10);
+    //$queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ, $name);
+    $queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
+    //$queue->disconnect("tcp://{$host}:{$port}");
     $queue->connect("tcp://{$host}:{$port}");
     $queue->setSockOpt (ZMQ::SOCKOPT_LINGER, 1000);
     $poller = new ZMQPoll();
