@@ -186,7 +186,7 @@ function _easyLock($ID,$lockTimeout=0) {
                     }
                 }
             }
-            usleep(50000); //50 ms
+            usleep(100000); //100 ms
         }
     } while(false);
 
@@ -785,13 +785,36 @@ function _safeRelease($ID) {
 /* }}} */
 
 // temporary counter
-/* {{{ function _tcIncr($name,$journal,$amount,$totalField="_total_")
+/* {{{ function _tcAddJournal($name,$journal,$amount,$totalField="_total_")
  * 进行暂扣
  */
-function _tcIncr($name,$journal,$amount,$totalField="_total_") {
+function _tcAddJournal($name,$journal,$amount,$totalField="_total_") {
     $rt=false;
 
     try {
+        if (empty($name)) {
+            throw new Exception(_info("[%s][name_empty]",__FUNCTION__));
+        }
+        if (isset($GLOBALS['RCC'])) {
+            $conn=$GLOBALS['RCC'];
+        } else {
+            $conn=$GLOBALS['lockConn'];
+        }
+        if ($conn->hexists($name,$journal)) {
+            //已经存在,不需要增加
+            _warn("[%s][tc: %s][journal: %s][exists_and_not_need_add]",__FUNCTION__,$name,$journal);
+            $rt=true;
+        } else {
+            //增加journal
+            if (false==$conn->hset($name,$journal,$amount)) {
+                throw new Exception(_info("[%s][tc: %s][journal: %s][del_failed]",__FUNCTION__,$name,$journal));
+            }
+            //更新总数
+            if (false===$conn->hincrbyfloat($name,$totalField,$amount)) {
+                throw new Exception(_info("[%s][tc: %s][journal: %s][amount: %s][upate_failed]",__FUNCTION__,$name,$journal,$mount));
+            }
+            $rt=true;
+        }
     } catch (Exception $e) {
         _error("Exception: %s", $e->getMessage());
     }
@@ -801,7 +824,7 @@ function _tcIncr($name,$journal,$amount,$totalField="_total_") {
 
 /* }}} */
 
-/* {{{ function _tcClearJournal($name,$journal,$amount,$totalField)
+/* {{{ function _tcClearJournal($name,$journal,$iAmount,$totalField)
  * 清除暂扣(实际扣除/扣除作废)
  */
 function _tcClearJournal($name,$journal,$iAmount,$totalField="_total_") {
@@ -843,6 +866,62 @@ function _tcClearJournal($name,$journal,$iAmount,$totalField="_total_") {
     }
 
     return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _getInfoFromCache($cate,$key)
+ * 框架内置缓存,获取
+ */
+function _getInfoFromCache($cate,$key) {
+    $rt=false;
+
+    try {
+        if (empty($cate) || empty($key)) {
+            throw new Exception(_info("[%s][cate_or_key_empty]",__FUNCTION__));
+        }
+        $now=time();
+        if (isset($GLOBALS['_CACHE_'][$cate][$key]) && $now>=$GLOBALS['_CACHE_'][$cate][$key]['ts']) {
+            $rt=$GLOBALS['_CACHE_'][$cate][$key]['info'];
+        }
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _setInfoToCache($cate,$key)
+ * 框架内置缓存, 设置
+ */
+function _setInfoToCache($cate,$key,$info) {
+    $rt=false;
+
+    try {
+        if (empty($cate) || empty($key)) {
+            throw new Exception(_info("[%s][cate_or_key_empty]",__FUNCTION__));
+        }
+        $to=30; //30秒过期
+        $exp=time()+$to; // 30秒过期
+        $GLOBALS['_CACHE_'][$cate][$key]['ts']=$exp;
+        $GLOBALS['_CACHE_'][$cate][$key]['info']=$info;
+        $rt=true;
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _clearCache()
+ *
+ */
+function _clearCache() {
+    unset($GLOBALS['_CACHE_']);
 }
 
 /* }}} */
