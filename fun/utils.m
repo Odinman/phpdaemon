@@ -917,6 +917,35 @@ function _setInfoToCache($cate,$key,$info) {
 
 /* }}} */
 
+/* {{{ function _updateInfoToCache($cate,$key,$info)
+ * 框架内置缓存, 设置
+ */
+function _updateInfoToCache($cate,$key,$info) {
+    $rt=false;
+
+    try {
+        if (empty($cate) || empty($key) || empty($info)) {
+            throw new Exception(_info("[%s][cate_or_key_or_info_empty]",__FUNCTION__));
+        }
+        if (!isset($GLOBALS['_CACHE_'][$cate][$key])) { //不需要更新
+            throw new Exception(_info("[%s][cache_not_exists][cate: %s][$key]",__FUNCTION__,$cate,$key));
+        }
+        $to=30; //30秒过期
+        $exp=time()+$to; // 30秒过期
+        $GLOBALS['_CACHE_'][$cate][$key]['ts']=$exp;
+        foreach($info as $k=>$v) {
+            $GLOBALS['_CACHE_'][$cate][$key]['info'][$k]=$v;
+        }
+        $rt=true;
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
 /* {{{ function _clearCache()
  *
  */
