@@ -873,16 +873,20 @@ function _tcClearJournal($name,$journal,$iAmount,$totalField="_total_") {
 /* {{{ function _getInfoFromCache($cate,$key)
  * 框架内置缓存,获取
  */
-function _getInfoFromCache($cate,$key) {
+function _getInfoFromCache($cate,$key=null) {
     $rt=false;
 
     try {
-        if (empty($cate) || empty($key)) {
-            throw new Exception(_info("[%s][cate_or_key_empty]",__FUNCTION__));
+        if (empty($cate)) {
+            throw new Exception(_info("[%s][cate_empty]",__FUNCTION__));
         }
-        $now=time();
-        if (isset($GLOBALS['_CACHE_'][$cate][$key]) && $now>=$GLOBALS['_CACHE_'][$cate][$key]['ts']) {
-            $rt=$GLOBALS['_CACHE_'][$cate][$key]['info'];
+        if (!empty($key)) {
+            $now=time();
+            if (isset($GLOBALS['_CACHE_'][$cate][$key]) && $now>=$GLOBALS['_CACHE_'][$cate][$key]['ts']) {
+                $rt=$GLOBALS['_CACHE_'][$cate][$key]['info'];
+            }
+        } else if (isset($GLOBALS['_CACHE_'][$cate])) {    //直接返回整个cate
+            $rt=$GLOBALS['_CACHE_'][$cate];
         }
     } catch (Exception $e) {
         _error("Exception: %s", $e->getMessage());
@@ -896,14 +900,14 @@ function _getInfoFromCache($cate,$key) {
 /* {{{ function _setInfoToCache($cate,$key)
  * 框架内置缓存, 设置
  */
-function _setInfoToCache($cate,$key,$info) {
+function _setInfoToCache($cate,$key,$info,$to=30) {
     $rt=false;
 
     try {
         if (empty($cate) || empty($key)) {
             throw new Exception(_info("[%s][cate_or_key_empty]",__FUNCTION__));
         }
-        $to=30; //30秒过期
+        $to=$to<=0?30:$to;
         $exp=time()+$to; // 30秒过期
         $GLOBALS['_CACHE_'][$cate][$key]['ts']=$exp;
         $GLOBALS['_CACHE_'][$cate][$key]['info']=$info;
