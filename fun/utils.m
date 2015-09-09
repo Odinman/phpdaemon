@@ -752,10 +752,10 @@ function _safeLock($ID,$lockTimeout=0) {
 
 /* {{{ function _safeRelease($ID)
  * 获取锁,这是一个用redis实现的分布式锁,保证一个id同时只有一个进程在处理
- * @param int $ID, 锁ID
- * @param string $checksum
+ * @param string $ID, 锁ID
+ * @param bool $force,是否强制完全释放
  */
-function _safeRelease($ID) {
+function _safeRelease($ID,$force=false) {
     $rt=false;
 
     if (empty($ID)) {
@@ -764,7 +764,7 @@ function _safeRelease($ID) {
     if ($GLOBALS['_LOCK_'][$ID]['locked']!==true) {
         return false;
     }
-    if ($GLOBALS['_LOCK_'][$ID]['depth']>0) { //当前进程已经get到lock
+    if ($GLOBALS['_LOCK_'][$ID]['depth']>0 && $force===false) { //当前进程已经get到lock
         $GLOBALS['_LOCK_'][$ID]['depth']-=1;
         return true;
     }
@@ -960,4 +960,57 @@ function _clearCache() {
 }
 
 /* }}} */
+
+/* {{{ function _spaceLock($tag,$id)
+ * 支持名称空间的锁定
+ */
+function _spaceLock($tag,$id) {
+    $rt=false;
+
+    if (empty($tag) || empty($id)) {
+        return $rt;
+    }
+    try {
+        $lock=_getSpaceName($tag,$id);
+        if (false==_safeLock($lock)) {
+            throw new Exception(_info("[%s][lock_failed: %s]",__FUNCTION__,$lock));
+        }
+        //放到缓存
+        $GLOBALS['_CACHE_']['_LOCKLIST_'][$lock]++;
+
+        $rt=true;
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _spaceRelease()
+ * 强制释放所有名称空间锁
+ */
+function _spaceRelease() {
+    $rt=false;
+
+    if (empty($GLOBALS['_CACHE_']['_LOCKLIST_'])) {
+        return true;
+    }
+    try {
+        foreach($GLOBALS['_CACHE_']['_LOCKLIST_'] as $lock=>$cnt) {
+            _notice("[%s][lock: %s][count: %d]",__FUNCTION__,$lock,$cnt);
+        }
+        $rt=_safeRelease($lock,true);
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    unset($GLOBALS['_CACHE_']['_LOCKLIST_']);
+
+    return $rt;
+}
+
+/* }}} */
+
 
