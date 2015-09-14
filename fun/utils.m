@@ -882,7 +882,7 @@ function _getInfoFromCache($cate,$key=null) {
         }
         if (!empty($key)) {
             $now=time();
-            if (isset($GLOBALS['_CACHE_'][$cate][$key]) && $now>=$GLOBALS['_CACHE_'][$cate][$key]['ts']) {
+            if (isset($GLOBALS['_CACHE_'][$cate][$key]) && $now<=$GLOBALS['_CACHE_'][$cate][$key]['ts']) {
                 $rt=$GLOBALS['_CACHE_'][$cate][$key]['info'];
             }
         } else if (isset($GLOBALS['_CACHE_'][$cate])) {    //直接返回整个cate
@@ -936,7 +936,7 @@ function _updateInfoToCache($cate,$key,$info) {
         return $rt;
     }
     try {
-        $to=30; //30秒过期
+        $to=30;
         $exp=time()+$to; // 30秒过期
         $GLOBALS['_CACHE_'][$cate][$key]['ts']=$exp;
         foreach($info as $k=>$v) {
@@ -948,6 +948,19 @@ function _updateInfoToCache($cate,$key,$info) {
     }
 
     return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _flushCache($cate,$key)
+ * 刷新缓存,直接删除缓存即可
+ */
+function _flushCache($cate,$key) {
+    if (isset($GLOBALS['_CACHE_'][$cate][$key])) {
+        unset($GLOBALS['_CACHE_'][$cate][$key]);
+    }
+
+    return true;
 }
 
 /* }}} */
