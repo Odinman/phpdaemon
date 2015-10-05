@@ -23,8 +23,10 @@ $GLOBALS['_sys']['bzcat']='/usr/bin/bzcat';
 $GLOBALS['_sys']['gzcat']='/usr/bin/gzcat';
 $GLOBALS['_sys']['tar']='/bin/tar';
 $GLOBALS['_sys']['scp']='/usr/bin/scp';
+$GLOBALS['_sys']['ssh']='/usr/bin/ssh';
 $GLOBALS['_sys']['cp']='/bin/cp';
 $GLOBALS['_sys']['rm']='/bin/rm';
+$GLOBALS['_sys']['rsync']='/usr/bin/rsync';
 /* }}} */
 
 /* {{{ _makeDir
@@ -256,33 +258,39 @@ function _transferFile($file,$path,$host=null,$port=null,$user=null,$bak_dir=nul
     if (file_exists($file) && !empty($path)) {
         if (!empty($host)) {
             //host不为空,说明是ssh方式
-            $cmd="{$GLOBALS['_sys']['scp']} -P {$port} -o StrictHostKeyChecking=no -o ConnectTimeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
+            if (file_exists($GLOBALS['_sys']['rsync'])) {
+                if (empty($bak_dir)) {  //不需要备份
+                    $removeOps="--remove-source-files";
+                }
+                $cmd="{$GLOBALS['_sys']['rsync']} -az -e '{$GLOBALS['_sys']['ssh']} -p {$port}' {$removeOps} --timeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
+            } else {
+                $cmd="{$GLOBALS['_sys']['scp']} -P {$port} -o StrictHostKeyChecking=no -o ConnectTimeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
+            }
         } else {
             //local
             _makeDir($path,"0755",0,'d');
             $cmd="{$GLOBALS['_sys']['cp']} {$file} {$path}";
         }
-        _debug("[".__FUNCTION__."][command:{$cmd}]",_DLV_NOTICE);
+        _notice("[%s][command: %s]",__FUNCTION__, $cmd);
         system($cmd,$trans_stat);
         if ($trans_stat===0) {
             if (!empty($bak_dir)) {
                 if (!file_exists($bak_dir)) {
                     _makeDir($bak_dir,"0755",0,'d');
                 }
-                exec("{$GLOBALS['_sys']['mv']} {$file} {$bak_dir}"); //backup
-            //} else {
-            //    exec("{$GLOBALS['_sys']['rm']} -f {$file}");
+                @exec("{$GLOBALS['_sys']['mv']} {$file} {$bak_dir}"); //backup
+            } else {
+                //无需备份,删除
+                @exec("{$GLOBALS['_sys']['rm']} -f {$file}");
             }
             $ret=true;
         } elseif (!empty($retry_dir)) {
             if (!file_exists($retry_dir)) {
                 _makeDir($retry_dir,"0755",0,'d');
             }
-            exec("{$GLOBALS['_sys']['mv']} {$file} {$retry_dir}"); //retry
-        } elseif (!empty($bak_dir) && file_exists($bak_dir)) {
-            exec("{$GLOBALS['_sys']['mv']} {$file} {$bak_dir}"); //backup
-        //} else {
-        //    exec("{$GLOBALS['_sys']['rm']} -f {$file}");
+            @exec("{$GLOBALS['_sys']['mv']} {$file} {$retry_dir}"); //retry
+        //} elseif (!empty($bak_dir) && file_exists($bak_dir)) {
+        //    exec("{$GLOBALS['_sys']['mv']} {$file} {$bak_dir}"); //backup
         }
     }
     return $ret;
