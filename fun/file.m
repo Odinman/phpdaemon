@@ -54,7 +54,7 @@ function _makeDir($path,$mode="0755",$depth=0,$type='d') {
 /* {{{ _findAllFiles
  * Recursive functions
  */
-function _findAllFiles($dir,$fileExt='tbz2',$depth=1,$check=true,$max=0) {
+function _findAllFiles($dir,$fileExt,$depth=1,$check=true,$max=0) {
     $ret=array();
     if ($root = scandir($dir)) {
         foreach($root as $value) { 
@@ -62,18 +62,16 @@ function _findAllFiles($dir,$fileExt='tbz2',$depth=1,$check=true,$max=0) {
                 continue;
             } 
             if(is_file("$dir/$value")) {
-                if (!empty($fileExt)) { //需要判断后缀名
-                    $info=pathinfo($value);
-                    if ($info['extension']==$fileExt) {
-                        $file="$dir/$value";
-                        $stat=0;
-                        if ($check==true) {
-                            $checkCmd=($fileExt=='tbz2')?$GLOBALS['_sys']['bzip2']:$GLOBALS['_sys']['gzip'];
-                            @system("$checkCmd -t $file 2>> /dev/null",$stat);
-                        }
-                        if ($stat==0) {
-                            $ret[]="$dir/$value";
-                        }
+                $info=pathinfo($value);
+                if ((!empty($fileExt) && $info['extension']==$fileExt) || (empty($fileExt) && @in_array($info['extension'],array('tgz','tbz2')))) {
+                    $file="$dir/$value";
+                    $stat=0;
+                    if ($check==true) {
+                        $checkCmd=($fileExt=='tbz2')?$GLOBALS['_sys']['bzip2']:$GLOBALS['_sys']['gzip'];
+                        @system("$checkCmd -t $file 2>> /dev/null",$stat);
+                    }
+                    if ($stat==0) {
+                        $ret[]="$dir/$value";
                     }
                 }
                 if ($max>0 && count($ret)>=$max) {
