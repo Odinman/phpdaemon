@@ -546,6 +546,9 @@ function _connectSafeMysql($host,$user,$pass,$db,$linkTag) {
     $GLOBALS[$linkKey]['link'] = mysqli_init();
     $GLOBALS[$linkKey]['link']->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
     $GLOBALS[$linkKey]['link']->options(MYSQLI_INIT_COMMAND, "SET NAMES utf8");
+    if (!empty($GLOBALS['timeZone'])) {
+        $GLOBALS[$linkKey]['link']->options(MYSQLI_INIT_COMMAND, "SET SESSION time_zone = '{$GLOBALS['timeZone']}'");
+    }
     @$GLOBALS[$linkKey]['link']->real_connect($host,$user,$pass,$db);
     if ($GLOBALS[$linkKey]['link']->connect_errno) {
         //连接失败
