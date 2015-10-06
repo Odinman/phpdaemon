@@ -54,7 +54,7 @@ function _makeDir($path,$mode="0755",$depth=0,$type='d') {
 /* {{{ _findAllFiles
  * Recursive functions
  */
-function _findAllFiles($dir,$fileExt,$depth=1,$check=true,$max=0) {
+function _findAllFiles($dir,$fileExt=null,$depth=1,$check=true,$max=0) {
     $ret=array();
     if ($root = scandir($dir)) {
         foreach($root as $value) { 
@@ -67,7 +67,7 @@ function _findAllFiles($dir,$fileExt,$depth=1,$check=true,$max=0) {
                     $file="$dir/$value";
                     $stat=0;
                     if ($check==true) {
-                        $checkCmd=($fileExt=='tbz2')?$GLOBALS['_sys']['bzip2']:$GLOBALS['_sys']['gzip'];
+                        $checkCmd=($info['extension']=='tbz2')?$GLOBALS['_sys']['bzip2']:$GLOBALS['_sys']['gzip'];
                         @system("$checkCmd -t $file 2>> /dev/null",$stat);
                     }
                     if ($stat==0) {
