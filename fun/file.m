@@ -237,9 +237,8 @@ function _moveFiles($files,$path) {
 
         if (!empty($moveFiles)) {
             @exec("{$GLOBALS['_sys']['mv']} -f ".implode(' ',$moveFiles)." {$path}",$arrLines,$stat);
-            _debug("[success:".implode(',',$moveFiles)."][failed:".implode(',',$failFiles)."][to:{$path}]");
         } else {
-            _debug("[success:".implode(',',$moveFiles)."][failed:".implode(',',$failFiles)."][to:{$path}]",_DLV_WARNING);
+            _notice("[success: %s][failed: %s][to: %s]",implode(',',$moveFiles),implode(',',$failFiles),$path);
         }
 
         $ret=($stat==0)?true:false;
