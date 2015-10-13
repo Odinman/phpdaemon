@@ -45,8 +45,8 @@ if (isset($GLOBALS['DATA'])) {  //如果没有配置数据层,可以不连
 }
 /* }}} */
 
-/* {{{ 后加载,加入worker定义初始化信息
- * 这些文件需要放在worker目录下,并且以path=file形式出现,如果一个目录下有多个文件,用','分隔
+/* {{{ 后加载
+ * 这些文件需要放在ROOT目录下,并且以path=file形式出现,如果一个目录下有多个文件,用','分隔
  */
 if (!empty($GLOBALS['OPTIONS']['postload'])) {
     foreach ($GLOBALS['OPTIONS']['postload'] as $postPath=>$postBases) {
