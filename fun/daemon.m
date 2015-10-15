@@ -108,18 +108,19 @@ function _spawnWorker($workerDetail) {
         $GLOBALS['_daemon']['workerScript']=$workerDetail['script'];
 
         /* {{{ fork worker后加载配置,可根据title以及sn来配置
-         * 这些文件需要放在ROOT目录下,并且以path=file形式出现,如果一个目录下有多个文件,用','分隔
+         * 这些文件需要放在_WORKERROOT_目录下或其子目录,并且以title=file形式出现,如果一个title需要有多个文件,用','分隔
          */
-        $ct=sprintf("%s_%s",$workerDetail['realTitle'],'config');
-        if (!empty($GLOBALS['OPTIONS'][$ct])) {
-            foreach ($GLOBALS['OPTIONS'][$ct] as $postPath=>$postBases) {
-                $bases=explode(',',$postBases);
-                foreach ($bases as $base) {
-                    $postFile=$GLOBALS['_daemon']['_WORKERROOT_'].'/'.$postPath.'/'.$base;
-                    if (@include_once($postFile)) {
-                        _notice("[post: %s][loaded]", $postFile);
-                    } else {
-                        _warn("[post: %s][load_fail]", $postFile);
+        if (!empty($GLOBALS['OPTIONS']['worker_config'])) {
+            foreach ($GLOBALS['OPTIONS']['worker_config'] as $wt=>$postBases) {
+                if ($wt==$workerDetail['realTitle']) {
+                    $bases=explode(',',$postBases);
+                    foreach ($bases as $base) {
+                        $cf=$GLOBALS['_daemon']['_WORKERROOT_'].'/'.$base;
+                        if (@include_once($cf)) {
+                            _notice("[worker: %s][loaded]", $cf);
+                        } else {
+                            _warn("[worker: %s][load_fail]", $cf);
+                        }
                     }
                 }
             }
