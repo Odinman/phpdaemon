@@ -24,6 +24,7 @@ include_once(_DAEMON_ROOT.'fun/log.m');
 include_once(_DAEMON_ROOT.'fun/base.m');
 include_once(_DAEMON_ROOT.'fun/daemon.m');
 include_once(_DAEMON_ROOT.'fun/file.m');
+include_once(_DAEMON_ROOT.'fun/time.m');
 include_once(_DAEMON_ROOT.'fun/utils.m');
 include_once(_DAEMON_ROOT.'fun/omq.m');
 include_once(_DAEMON_ROOT.'fun/omqpoll.m');
