@@ -25,7 +25,7 @@ function _getTS($tsStr,$format) {
         }
         switch(strtoupper($format)) {
         case 'RFC3339NANO': //3339到纳秒(php最多处理到微秒)  "2006-01-02T15:04:05.999999999-07:00"
-            $tsStr=substr($tsStr,0,strpos($tsStr,'.')+7).substr($tsStr,-6);
+            $tsStr=preg_replace('/\.\d{0,}([Z+-])/',"$1",$tsStr);
             $d=new DateTime($tsStr);
             $rt=$d->getTimestamp();
             break;
