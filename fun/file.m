@@ -263,7 +263,7 @@ function _transferFile($file,$path,$host=null,$port=null,$user=null,$bak_dir=nul
                 if (!empty($key) && file_exists($key)) {
                     $keyCmdStr="-i {$key}";
                 }
-                $cmd="{$GLOBALS['_sys']['rsync']} -az -e '{$GLOBALS['_sys']['ssh']} -p {$port} {$keyCmdStr}' {$removeOps} --timeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
+                $cmd="{$GLOBALS['_sys']['rsync']} -az -e '{$GLOBALS['_sys']['ssh']} -p {$port} {$keyCmdStr} -o StrictHostKeyChecking=no' {$removeOps} --timeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
             } else {
                 $cmd="{$GLOBALS['_sys']['scp']} -P {$port} {$keyCmdStr} -o StrictHostKeyChecking=no -o ConnectTimeout=20 {$file} {$user}@{$host}:{$path} 2>>/dev/null";
             }
