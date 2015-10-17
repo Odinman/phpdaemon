@@ -16,7 +16,7 @@
 /* {{{ function _getTS($tsStr,$format)
  * 从字符串获取时间戳
  */
-function _getTS($tsStr,$format) {
+function _getTS($tsStr,$format='RFC3339NANO') {
     $rt=false;
 
     try {
