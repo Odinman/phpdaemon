@@ -339,7 +339,7 @@ function _package($files,$tarball=null,$type='j') {
 }
 /* }}} */
 
-/* {{{ updateTdb
+/* {{{ _updateTdb
  */
 function _updateTdb($file_fullpath,$file_content) {
     if($fp=@fopen($file_fullpath,"wb")){
@@ -352,3 +352,44 @@ function _updateTdb($file_fullpath,$file_content) {
     }
 }
 /* }}} */
+
+/* {{{ function _getStatus($file)
+ * 从文件中读取状态
+ */
+function _getStatus($file) {
+    $rt=false;
+
+    if (file_exists($file) && false!=($ss=trim(file_get_contents($file)))) {
+        if (false!=($rt=json_decode($ss,true))) {
+        } else {
+            $rt=$ss;
+        }
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+/* {{{ function _saveStatus($status,$file)
+ *
+ */
+function _saveStatus($status,$file) {
+    $rt=false;
+
+    try {
+        if (is_array($status)) {
+            $status['_ts_']=time();
+            $status=json_encode($status);
+        }
+        _updateTdb($file,$status);
+    } catch (Exception $e) {
+        _error("Exception: %s", $e->getMessage());
+    }
+
+    return $rt;
+}
+
+/* }}} */
+
+
