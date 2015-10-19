@@ -117,11 +117,13 @@ function _spawnWorker($workerDetail) {
                     foreach ($bases as $base) {
                         $cf=$GLOBALS['_daemon']['_WORKERROOT_'].'/'.$base;
                         if (@include_once($cf)) {
-                            _notice("[worker: %s][loaded]", $cf);
+                            _notice("[%s][worker: %s][loaded]",__FUNCTION__, $cf);
                         } else {
-                            _warn("[worker: %s][load_fail]", $cf);
+                            _warn("[%s][worker: %s][load_fail]",__FUNCTION__, $cf);
                         }
                     }
+                } else {
+                    _warn("[%s][need_title: %s][real_title: %s][not_match]",__FUNCTION__,$wt,$workerDetail['realTitle']);
                 }
             }
         }
