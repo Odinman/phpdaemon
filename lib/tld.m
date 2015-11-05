@@ -6113,7 +6113,8 @@ $GLOBALS['_TLD_']=[
 
 function _getTLD($url) {
     $urlData = parse_url($url);
-    $hostData = explode('.', $urlData['host']);
+    $h=empty($urlData['host'])?$urlData['path']:$urlData['host'];
+    $hostData = explode('.', $h);
     $hostData = array_reverse($hostData);
 
     if(array_search($hostData[1] . '.' . $hostData[0], $GLOBALS['_TLD_']) !== FALSE) {
