@@ -606,6 +606,37 @@ function _mysqlSafeExecute($linkTag, $sql,$tried=0) {
 }
 /* }}} */
 
+/* {{{ function _mysqlSafeEscapeString($linkTag, $string,$tried=0)
+ * 在mysqlnd下mysqli::ping根本无效,因此这里手动重连
+ */
+function _mysqlSafeEscapeString($linkTag, $string,$tried=0) {
+    $rt=false;
+
+    $linkKey=_safeLinkKey($linkTag);  // adminLink,adminWLink, etc
+    //_notice("[%s][tag:%s][key:%s]",__FUNCTION__,$linkTag,$linkKey);
+    if ($GLOBALS[$linkKey]['link']->ping()) {  //如果php.ini设置了mysqli.reconnect = On,会尝试重连
+        return $GLOBALS[$linkKey]['link']->real_escape_string($string);
+    } else {
+
+        _warn("[%s][%s][query_failed: %s]",__FUNCTION__,$sql, $GLOBALS[$linkKey]['link']->error);
+        if ($GLOBALS[$linkKey]['transaction_in_progress']!==true && $tried<2) { // trasaction要求不能断线
+            $tried++;
+            //重连, 一次
+            $host=$GLOBALS[$linkKey]['host'];
+            $user=$GLOBALS[$linkKey]['user'];
+            $pass=$GLOBALS[$linkKey]['pass'];
+            $db=$GLOBALS[$linkKey]['db'];
+            _connectSafeMysql($host,$user,$pass,$db,$linkTag);
+            _warn("[%s][reconnect:%s][tried:%s]",__FUNCTION__,$linkTag,$tried);
+            return _mysqlSafeEscapeString($linkTag,$string,$tried);
+        }
+
+    }
+
+    return $rt;
+}
+/* }}} */
+
 /* {{{ function _safeAffectedRows($linkTag)
  * 
  */
