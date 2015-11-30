@@ -60,13 +60,15 @@ function _omqDo($queue,$msg) {
             } catch (ZMQSocketException $e) {
                 //_notice("[%s]get error: %s",__FUNCTION__, $e->getMessage());
             }
-            sleep(1);
+            //echo "sleep\n";
+            usleep(1000);
         }
 
         if (!$received) {
             break;
         }
 
+        print_r($tmp);
         $r = array_shift($tmp);
         if ($r == "NIL") {
             $rt = NULL;
@@ -80,6 +82,19 @@ function _omqDo($queue,$msg) {
     } while(false);
 
     return $rt;
+}
+/* }}} */
+
+/* {{{ function _omqBTask()
+ *
+ */
+//function _omqBTask($queue,$key,$value) {
+function _omqBTask() {
+    $args=func_get_args();
+    $queue=array_shift($args);  //第一个参数是queue,取出
+    array_unshift($args, "BTASK");    //放命令到数组头部
+    //return _omqDo($queue,array("PUSH",$key,$value));
+    return _omqDo($queue,$args);
 }
 /* }}} */
 

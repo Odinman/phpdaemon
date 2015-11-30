@@ -157,3 +157,15 @@ function _omqPollSet($poller,$key,$value) {
 }
 /* }}} */
 
+/* {{{ function _omqPollComplete($poller,$key, $value)
+ *
+ */
+function _omqPollComplete($poller,$key,$value) {
+    //return _omqPollDo($poller,array("SET","",$key,$value));
+    $args=func_get_args();
+    $poller=array_shift($args);  //第一个参数是queue,取出
+    array_unshift($args, "COMPLETE", "");    //放命令到数组头部
+    return _omqPollDo($poller,$args);
+}
+/* }}} */
+
