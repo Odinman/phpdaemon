@@ -1018,7 +1018,8 @@ function _spaceLock($tag,$id) {
         return $rt;
     }
     try {
-        $lock=_getSpaceName($tag,$id);
+        //$lock=_getSpaceName($tag,$id);
+        $lock=sprintf('%s:%s',$tag,$id);
         if (false==_safeLock($lock)) {
             throw new Exception(_info("[%s][lock_failed: %s]",__FUNCTION__,$lock));
         }
