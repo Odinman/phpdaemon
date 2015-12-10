@@ -1017,6 +1017,9 @@ function _spaceLock($tag,$id) {
     if (empty($tag) || empty($id)) {
         return $rt;
     }
+    if ($GLOBALS['_NOLOCK_']===true) {
+        return true;
+    }
     try {
         //$lock=_getSpaceName($tag,$id);
         $lock=sprintf('%s:%s',$tag,$id);
