@@ -49,7 +49,7 @@ function _omqPollDo($poller,$msg, $timeout=0) {
             $sender=$senders[0];
             $sender->sendmulti($msg, ZMQ::MODE_DONTWAIT);
         } else {
-            _error("[%s][senders_null: %s]",var_export($poller,true));
+            _error("[%s][senders_null: %s]",__FUNCTION__,var_export($poller,true));
             break;
         }
 
@@ -59,12 +59,12 @@ function _omqPollDo($poller,$msg, $timeout=0) {
             $receiver=$receivers[0];
             $tmp = $receiver->recvMulti();
         } else {
-            _error("[%s][receivers_null: %s]",var_export($poller,true));
+            _error("[%s][receivers_null: %s]",__FUNCTION__,var_export($poller,true));
             break;
         }
 
         if (!$tmp) {
-            _error("[%s][response_null: %s]",var_export($poller,true));
+            _error("[%s][response_null: %s]",__FUNCTION__,var_export($poller,true));
             break;
         }
 
@@ -73,7 +73,7 @@ function _omqPollDo($poller,$msg, $timeout=0) {
             $rt = NULL;
             break;
         } elseif ($r != "OK") {
-            _notice("[%s][response_error: %s]",$r);
+            _notice("[%s][response_error: %s]",__FUNCTION__,$r);
             break;
         }
 
