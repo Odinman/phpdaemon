@@ -22,7 +22,7 @@ function _getOmqPoller($host,$port) {
     $queue = new ZMQSocket(new ZMQContext(), ZMQ::SOCKET_REQ);
     //$queue->disconnect("tcp://{$host}:{$port}");
     $queue->connect("tcp://{$host}:{$port}");
-    $queue->setSockOpt (ZMQ::SOCKOPT_LINGER, 1000);
+    $queue->setSockOpt (ZMQ::SOCKOPT_LINGER, 100);
     $poller = new ZMQPoll();
     $poller->add($queue, ZMQ::POLL_IN | ZMQ::POLL_OUT);
     return $poller;
